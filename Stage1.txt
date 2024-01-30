@@ -1,0 +1,108 @@
+Na którym systemie liczbowym operuje komputer?
+Dwójkowym
+Dziesiętnym
+Szestnastkowym
+Ósemkowym
+
+Jaki kolor reprezentuje litera B w RGB?
+Niebieski
+Czerwony
+Żółty
+Brązowy
+
+Ile bitów(b) ma MegaBajt(MB)?
+1000
+1024
+8000
+2048
+
+Jaką liczbe w systemie dziesiętnym reprezentuje "F" w szesnastkowym?
+15
+16
+10
+18
+
+W jakim typie zmiennej zapisuje się wartość logiczną (prawda/fałsz)?
+boolean
+bigInt
+string
+float
+
+Jaki kolor reprezentuje zapis w systemie szesnastkowym "#ffffff"?
+Biały
+Czarny
+Fioletowy
+Zielony
+
+Jaki rodzaj portu ma kabel Ethernetowy?
+Rj-45
+Rj-65
+USB-A
+Jack 3.0
+
+Do czego używa się kabela Jack?
+Przesyłu audio
+Połączenia internetowego
+Ledy Gamera
+Zasilanie komputera
+
+Jaki komponent komputera odpowiada za tworzenie obrazu?
+Karta graficzna (GPU)
+Procesor (CPU)
+Płyta główna (GAMI TO FURAS)
+Wyświetlacz (144hz)
+
+Jakiej pamięci używa karta graficzna?
+VRAM
+RAM
+ROM
+HDD
+
+Jak nazywa się pamięć, która jest ulotna?
+RAM
+ROM
+HDD
+SSD
+
+Co znaczy skrót RAM?
+Random Access Memory
+Read Access Memory
+Random Access Machine
+Read Access Machine
+
+Co znaczy skrót HTML?
+Hyper Text Markup Language
+Hyper Text Machine Language
+Hyper Text Markup Line
+Hyper Text Machine Line
+
+Co znaczy skrót CSS?
+Cascading Style Sheets
+Cascading Style System
+Cascading Style Sheet
+Cascading Style System
+
+Który z tych języków służy do operacjach na bazie danych?
+PHP
+CSS
+HTML
+JS
+
+Czy Marcin to furras?
+Tak i mam dowody
+Tak ale nie mam dowodów
+Nie ale mam dowody
+Nie i nie mam dowodów
+
+Kto założył Facebooka?
+Mark Zuckerberg
+Bill Gates
+Elon Musk
+Steve Jobs
+
+Kto założył Microsoft?
+Bill Gates
+Mark Zuckerberg
+Elon Musk
+Steve Jobs
+
