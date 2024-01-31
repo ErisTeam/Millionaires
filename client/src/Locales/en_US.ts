@@ -1,0 +1,4 @@
+export default {
+	appName: 'WHO THE HECK WANTS TO BE A MOTHER TRUCKING MILLIONAIRE',
+	
+};
