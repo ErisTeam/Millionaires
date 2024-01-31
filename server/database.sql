@@ -1,6 +1,6 @@
 --- Create and populate the `questions` table
 CREATE TABLE IF NOT EXISTS questions (
-    id INTEGER NOT NULL primary key,
+    id INTEGER UNIQUE NOT NULL primary key,
     question TEXT,
     difficulty INTEGER,
     impressions INTEGER
@@ -20,7 +20,7 @@ INSERT INTO questions (
 
 --- Create and populate the `answers` table
 CREATE TABLE IF NOT EXISTS answers (
-    id INTEGER NOT NULL primary key,
+    id INTEGER UNIQUE NOT NULL primary key,
     question_id INTEGER,
     answer TEXT,
     is_correct BOOLEAN,
@@ -52,7 +52,7 @@ INSERT INTO answers (
 
 --- Create and populate the `runs` table
 CREATE TABLE IF NOT EXISTS runs (
-    id INTEGER NOT NULL primary key,
+    id INTEGER UNIQUE NOT NULL primary key,
     name VARCHAR(255),
     started_at TIMESTAMP,
     used_lifelines INTEGER
@@ -71,7 +71,7 @@ INSERT INTO runs (
 
 --- Create and populate the `run_questions` table
 CREATE TABLE IF NOT EXISTS run_questions (
-    id INTEGER NOT NULL primary key,
+    id INTEGER UNIQUE NOT NULL primary key,
     run_id INTEGER,
     question_id INTEGER,
     answer_id INTEGER,
