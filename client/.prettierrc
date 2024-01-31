@@ -1,0 +1,10 @@
+{
+	"bracketSameLine": false,
+	"bracketSpacing": true,
+	"useTabs": true,
+	"singleQuote": true,
+	"printWidth": 120,
+	"importOrder": ["^components/(.*)$", "^[./]"],
+	"importOrderSeparation": true,
+	"importOrderSortSpecifiers": true
+}
