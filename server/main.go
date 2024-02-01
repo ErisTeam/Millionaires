@@ -4,83 +4,97 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"millionairesServer/protobufMessages"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/mattn/go-sqlite3"
+	"google.golang.org/protobuf/proto"
 )
 
+//go:generate
+
+var logger = log.New(os.Stdout, "[INFO]: ", log.Ldate|log.Ltime)
+
 type Question struct {
-    Id int
-    Question string
-    Difficulty int
-    Impressions int
+	Id          int
+	Question    string
+	Difficulty  int
+	Impressions int
+}
+
+func startRun(ctx *fiber.Ctx) error {
+	ctx.Set("Content-Type", "application/vnd.google.protobuf")
+	var request = &protobufMessages.StartRunRequest{}
+
+	if err := proto.Unmarshal(ctx.Body(), request); err != nil {
+
+		log.Fatalln(err)
+	}
+	var response = protobufMessages.StartRunResponse{}
+	response.RunId = 900
+	var out, err = proto.Marshal(&response)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	println(out)
+	return ctx.Status(200).Send(out)
 }
 
 func main() {
-    fmt.Println("Starting...")
+	fmt.Println("Starting...")
 
-    // Open connection with the database
-    var db, err = sql.Open("sqlite3", "./millionaires.db")
-	if err != nil { log.Fatal(err) }
+	// Open connection with the database
+	var db, err = sql.Open("sqlite3", "./millionaires.db")
+	if err != nil {
+		panic(err)
+	}
 	defer db.Close()
 
-    //sqlStmt := `
-    //    CREATE TABLE questions (id integer NOT NULL PRIMARY KEY, question text);
-    //    DELETE FROM questions;
-	//`
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals("db", db)
+		return c.Next()
+	})
 
-	//_, err = db.Exec(sqlStmt)
-	//if err != nil {
-	//	log.Printf("%q: %s\n", err, sqlStmt)
-	//	return
-	//}
+	app.Post("/startRun", startRun)
 
-	//tx, err := db.Begin()
-	//if err != nil { log.Fatal(err) }
-	//stmt, err := tx.Prepare("INSERT INTO questions (id, question) VALUES (?, ?)")
-	//if err != nil { log.Fatal(err) }
-	//defer stmt.Close()
-	//for i := 0; i < 100; i++ {
-	//	_, err = stmt.Exec(i, "Gami is a...")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}
-	//err = tx.Commit()
-	//if err != nil { log.Fatal(err) }
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Welcome to millionaires!")
+	})
 
-    app := fiber.New()
+	// Gets all questions (as a test)
+	app.Get("/questions", func(c *fiber.Ctx) error {
+		// Make a query to the database
+		rows, err := db.Query("SELECT * FROM questions")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
 
-    app.Get("/", func (c *fiber.Ctx) error {
-        return c.SendString("Welcome to millionaires!")
-    })
+		// Get all the rows of the query
+		var questions []Question = make([]Question, 0)
+		for rows.Next() {
+			var question Question
 
-    // Gets all questions (as a test)
-    app.Get("/questions", func (c *fiber.Ctx) error {
-        // Make a query to the database
-        rows, err := db.Query("SELECT * FROM questions")
-        if err != nil { log.Fatal(err) }
-        defer rows.Close()
+			// Assign values to the `Question` struct
+			err = rows.Scan(&question.Id, &question.Question, &question.Difficulty, &question.Impressions)
 
-        // Get all the rows of the query
-        var questions[] Question = make([]Question, 0)
-        for rows.Next() {
-            var question Question
+			if err != nil {
+				log.Fatal(err)
+			}
 
-            // Assign values to the `Question` struct
-            err = rows.Scan(&question.Id, &question.Question, &question.Difficulty, &question.Impressions)
+			// Append current question to the slice
+			questions = append(questions, question)
+		}
 
-            if err != nil { log.Fatal(err) }
+		err = rows.Err()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-            // Append current question to the slice
-            questions = append(questions, question)
-        }
+		return c.JSON(questions)
+	})
 
-        err = rows.Err()
-        if err != nil { log.Fatal(err) }
-
-        return c.JSON(questions)
-    })
-
-    log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":3000"))
 }

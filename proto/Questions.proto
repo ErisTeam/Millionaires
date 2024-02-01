@@ -1,0 +1,20 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+package millionaires.Questions;
+
+import "Answers.proto";
+
+message Question{
+    int32 id = 1;
+    string question = 2;
+}
+
+//GetQuestion
+message GetQuestionRequest{
+   int32 runId = 1;    
+}
+message GetQuestionResponse{
+    Question question = 1;
+    repeated Answers.Answer answer = 2;
+}

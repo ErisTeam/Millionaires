@@ -7,8 +7,7 @@ import './index.css';
 
 import { AppStateProvider, useAppState } from './AppState';
 
-import { onMount } from 'solid-js';
-import { API_URL } from './constants';
+import Home from './cOmPoNeNtS/Home';
 
 const root = document.getElementById('root');
 function App() {
@@ -16,7 +15,9 @@ function App() {
 
 	return (
 		<AppStateProvider>
-			<Router></Router>
+			<Router>
+				<Route component={Home} />
+			</Router>
 		</AppStateProvider>
 	);
 }

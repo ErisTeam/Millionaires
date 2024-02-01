@@ -1,0 +1,27 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+
+package millionaires.Run;
+
+//StartRun
+message StartRunRequest{
+    string Name = 1;
+}
+message StartRunResponse{
+    int32 runId = 1;
+}
+
+
+enum LifeLines{
+    A = 0;
+
+};
+
+message UseLifeLineRequest{
+    int32 runId = 1;
+    LifeLines lifeline = 2;
+}
+message UseLifeLineResponse {
+    
+}

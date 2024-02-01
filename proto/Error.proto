@@ -1,0 +1,9 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+package millionaires.Error;
+
+message Error{
+    string message = 1;
+    string where = 2;
+}

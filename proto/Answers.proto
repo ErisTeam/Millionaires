@@ -1,0 +1,17 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+package millionaires.Answers;
+
+message Answer{
+    int32 id = 1;
+    string answer = 2;
+}
+
+//GetNextAnswer
+message GetNextAnswerRequest{
+    int32 id = 1;
+}
+message GettNextAnswerResponse{
+    Answer answer = 1;
+}
