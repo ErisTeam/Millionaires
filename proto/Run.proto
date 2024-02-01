@@ -12,10 +12,9 @@ message StartRunResponse{
     int32 runId = 1;
 }
 
-
+//TODO: add lifelines
 enum LifeLines{
     A = 0;
-
 };
 
 message UseLifeLineRequest{

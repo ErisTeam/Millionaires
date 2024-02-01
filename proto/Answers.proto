@@ -10,16 +10,11 @@ message Answer{
     bool isCorrect = 4;
     int32 chosen = 5;
 }
- 
-message AnswerPartial{
-    int32 id = 1;
-    string answer = 2;
-}
 
 //GetNextAnswer
 message GetNextAnswerRequest{
     int32 id = 1;
 }
-message GettNextAnswerResponse{
+message GetNextAnswerResponse{
     Answer answer = 1;
 }

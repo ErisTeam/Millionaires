@@ -12,8 +12,7 @@ message Question{
     int32 impressions = 4;
 }
 
-//GetQuestion
-//Dont know why these two exist
+//GetQuestion 
 message GetQuestionRequest{
    int32 runId = 1;    
 }
@@ -25,5 +24,5 @@ message GetQuestionResponse{
 message QuestionResponse {
     int32 id = 1;
     string question = 2;
-    repeated Answers.AnswerPartial answers = 3;
+    repeated Answers.Answer answers = 3;
 }
