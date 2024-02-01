@@ -7,14 +7,23 @@ import "Answers.proto";
 
 message Question{
     int32 id = 1;
-    string question = 2;
+    string question = 2; 
+    int32 difficulty = 3;
+    int32 impressions = 4;
 }
 
 //GetQuestion
+//Dont know why these two exist
 message GetQuestionRequest{
    int32 runId = 1;    
 }
 message GetQuestionResponse{
     Question question = 1;
-    repeated Answers.Answer answer = 2;
+    repeated Answers.Answer answers = 2;
+}
+
+message QuestionResponse {
+    int32 id = 1;
+    string question = 2;
+    repeated Answers.AnswerPartial answers = 3;
 }
