@@ -1,16 +1,38 @@
 :root {
-	
-}
-* {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
-	min-width: 0;
-	min-height: 0;
-	
-}
+	/* purple backgrounds */
+	/* dark purple gradient back ground */
 
-body {
-	height: 100vh;
-	width: 100vw;
+	--bg0: #1a0d2a;
+	--bg1: #2a1b3d;
+	--bg2: #3c2a55;
+	--bg3: #4d3a6e;
+	--bg4: #5e4a87;
+	--bg5: #6d5a9f;
+
+	--primary: #6d4390;
+	--secondary: #b960d8;
+	--accent: #e59eef;
+
+	/* button gradient */
+	--primaryGradient: linear-gradient(90deg, rgba(109, 67, 144, 1) 0%, rgba(185, 96, 216, 1) 100%);
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+		min-width: 0;
+		min-height: 0;
+		color: inherit;
+	}
+
+	body {
+		height: 100vh;
+		width: 100vw;
+		color: white;
+
+		background-color: var(--bg0);
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
 }

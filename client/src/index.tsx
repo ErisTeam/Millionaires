@@ -7,8 +7,7 @@ import './index.css';
 
 import { AppStateProvider, useAppState } from './AppState';
 
-import Home from './cOmPoNeNtS/Home';
-
+import Main from './Pages/main';
 const root = document.getElementById('root');
 function App() {
 	const AppState = useAppState();
@@ -16,7 +15,7 @@ function App() {
 	return (
 		<AppStateProvider>
 			<Router>
-				<Route component={Home} />
+				<Route component={Main} />
 			</Router>
 		</AppStateProvider>
 	);
