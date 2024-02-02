@@ -24,9 +24,9 @@
 		"paths": {
 			"@/*": ["./*"],
 			"@api/*": ["./api/*"],
-			"@components/*": ["./components/*"]
-		}
+			"@components/*": ["./components/*"],
+		},
 	},
 	"include": ["src"],
-	"references": [{ "path": "./tsconfig.node.json" }]
+	"references": [{ "path": "./tsconfig.node.json" }],
 }

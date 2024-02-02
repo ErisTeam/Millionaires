@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"log"
 	"millionairesServer/protobufMessages"
-	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	_ "github.com/mattn/go-sqlite3"
 	"google.golang.org/protobuf/proto"
 )
 
-//go:generate
+//go:generate protoc --go_out=./ ../proto/*.proto  --proto_path=../proto/
 
 var logger = log.New(os.Stdout, "[INFO]: ", log.Ldate|log.Ltime)
 
@@ -26,55 +26,32 @@ func c_error(c *fiber.Ctx, message string, status_code int) error {
 
 }
 
-func startRun(ctx *fiber.Ctx) error {
-	ctx.Set("Content-Type", "application/vnd.google.protobuf")
-	var request = &protobufMessages.StartRunRequest{}
-
-	if err := proto.Unmarshal(ctx.Body(), request); err != nil {
-
-		logger.Fatalln(err)
-	}
-	var response = protobufMessages.StartRunResponse{}
-	response.RunId = 900
-	var out, err = proto.Marshal(&response)
-	if err != nil {
-		logger.Fatalln(err)
-	}
-	println(out)
-	return ctx.Status(http.StatusOK).Send(out)
-}
-
-func NewQuestionResponse(question *protobufMessages.Question, answers *[4]protobufMessages.Answer) protobufMessages.QuestionResponse {
-
-	var parsed_answers []*protobufMessages.AnswerPartial
+func NewQuestionResponse(question *protobufMessages.Question, answers []*protobufMessages.Answer) *protobufMessages.GetQuestionResponse {
+	var parsed_answers []*protobufMessages.Answer
 
 	for _, answer := range answers {
-		test := &protobufMessages.AnswerPartial{
-			Id:     int32(answer.Id),
-			Answer: answer.Answer,
-		}
-		parsed_answers = append(parsed_answers, test)
+		parsed_answers = append(parsed_answers, &protobufMessages.Answer{Id: answer.Id, QuestionId: answer.QuestionId, Answer: answer.Answer})
 	}
 
-	return protobufMessages.QuestionResponse{
-		Id:       int32(question.Id),
-		Question: question.Question,
-		Answers:  parsed_answers,
-	}
+	return &protobufMessages.GetQuestionResponse{Question: question, Answers: parsed_answers}
 }
 
 func main() {
 	fmt.Println("Starting...")
 
 	// Open connection with the database
-	var db, err = sql.Open("sqlite3", "./millionaires.db")
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
+
+	// defer db.Close()
 
 	app := fiber.New()
+
+	app.Use(cors.New(cors.ConfigDefault))
+
 	app.Use(func(c *fiber.Ctx) error {
+		var db, err = sql.Open("sqlite3", "./millionaires.db")
+		if err != nil {
+			panic(err)
+		}
 		c.Locals("db", db)
 		return c.Next()
 	})
@@ -104,11 +81,13 @@ func main() {
 			return c_error(c, fmt.Sprintf("Error: `difficulty`: `%d` must be between <1,12>", difficulty), fiber.ErrBadRequest.Code)
 		}
 
-		logger.Printf("Sending a random question of `difficulty` = `%d`", difficulty)
+		log.Printf("Sending a random question of `difficulty` = `%d`", difficulty)
+
+		var db = c.Locals("db").(*sql.DB)
+		println(db.Ping())
 
 		// Prepare SQL for retriving a random question
 		random_question_stmt, err := db.Prepare("SELECT * FROM questions WHERE questions.difficulty = ? ORDER BY RANDOM() LIMIT 1;")
-		defer random_question_stmt.Close()
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while preparing SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
@@ -136,11 +115,11 @@ func main() {
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while getting values from the SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
+		// random_question_stmt.Close()
 
 		// TODO: Querying answers
 		// Prepare SQL for retriving answers to a question
 		answers_stmt, err := db.Prepare("SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == ? ORDER BY RANDOM();")
-		defer answers_stmt.Close()
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while preparing SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
@@ -150,13 +129,15 @@ func main() {
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while querying SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
+		// answers_stmt.Close()
 
-		// TODO: Handle a case when there are less 4 answers
 		// Execute the query and save the result as an array of `Answer` structs
-		var answers [4]protobufMessages.Answer
+		var answers []*protobufMessages.Answer
 		for i := 0; answer_rows.Next() && i < 4; i++ {
 			// Insert row values into a struct
-			err = answer_rows.Scan(&answers[i].Id, &answers[i].QuestionId, &answers[i].Answer, &answers[i].IsCorrect, &answers[i].Chosen)
+			answer := &protobufMessages.Answer{}
+			err = answer_rows.Scan(&answer.Id, &answer.QuestionId, &answer.Answer, &answer.IsCorrect, &answer.Chosen)
+			answers = append(answers, answer)
 			if err != nil {
 				return c_error(c, fmt.Sprintf("Error while getting values from the SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
 			}
@@ -167,16 +148,14 @@ func main() {
 			return c_error(c, fmt.Sprintf("Error while fetching SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
 
-		logger.Printf("Succesfully processed a request for a random question of `difficulty` = `%d`", difficulty)
+		log.Printf("Succesfully processed a request for a random question of `difficulty` = `%d`", difficulty)
 
-		returnable := NewQuestionResponse(&random_question, &answers)
-		protoReturnable, err := proto.Marshal(&returnable)
+		proto_out, err := proto.Marshal(NewQuestionResponse(&random_question, answers))
 		if err != nil {
-			return c_error(c, fmt.Sprintf("Error while marshalling protobuf: `%s`", err), fiber.ErrInternalServerError.Code)
+			log.Fatalln(err)
 		}
-
-		return c.Status(http.StatusOK).Send(protoReturnable)
+		return c.Send(proto_out)
 	})
 
-	logger.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":9090"))
 }

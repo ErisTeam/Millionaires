@@ -1,6 +1,6 @@
-/* @refresh reload */
 import 'solid-devtools';
 import style from './main.module.css';
+import { IconDiamondFilled, IconDiamondsFilled } from '@tabler/icons-solidjs';
 
 export default function App() {
 	return (
@@ -16,17 +16,32 @@ export default function App() {
 			<div class={style.game}>
 				<div class={style.ai}></div>
 				<div class={style.question}>
-					<h3>Czy Gami to Furras?</h3>
-					<div class={style.buttons}>
-						<button>odpowiedź 1</button>
-						<button>odpowiedź 2</button>
-						<button>odpowiedź 3</button>
-						<button>odpowiedź 4</button>
-					</div>
+					<h3 class={style.hexagon}>Czy Gami to Furras?</h3>
+					<ol class={style.buttons}>
+						<li>
+							<button class={style.hexagon}>
+								<span />
+								odpowiedź 1
+							</button>
+							<button class={style.hexagon}>
+								<IconDiamondsFilled />
+								odpowiedź 2
+							</button>
+						</li>
+						<li>
+							<button class={style.hexagon}>
+								<IconDiamondsFilled /> odpowiedź 3
+							</button>
+							<button class={style.hexagon}>
+								<IconDiamondsFilled />
+								odpowiedź 4
+							</button>
+						</li>
+					</ol>
 				</div>
 			</div>
 			<div class={style.ladder}>
-				<ul>
+				<ol>
 					<li>1 X</li>
 					<li>2 X</li>
 					<li>3 X</li>
@@ -39,7 +54,7 @@ export default function App() {
 					<li>10 X</li>
 					<li>11 X</li>
 					<li>12 X</li>
-				</ul>
+				</ol>
 			</div>
 		</div>
 	);

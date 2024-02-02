@@ -8,6 +8,7 @@ import './index.css';
 import { AppStateProvider, useAppState } from './AppState';
 
 import Main from './Pages/main';
+import ApiTest from './ApiTest';
 const root = document.getElementById('root');
 function App() {
 	const AppState = useAppState();
@@ -15,7 +16,8 @@ function App() {
 	return (
 		<AppStateProvider>
 			<Router>
-				<Route component={Main} />
+				<Route path="/" component={Main} />
+				<Route path="/apiTest" component={ApiTest} />
 			</Router>
 		</AppStateProvider>
 	);
