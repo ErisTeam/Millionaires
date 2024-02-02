@@ -7,8 +7,8 @@ export default function App() {
 		<div class={style.container}>
 			<div class={style.game}>
 				<div class={style.ai}>
-					<div class={style.host}></div>
 					<div class={style.questionImg}></div>
+					<div class={style.host}></div>
 				</div>
 				<div class={style.question}>
 					<h3 class={style.hexagon}>
