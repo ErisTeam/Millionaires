@@ -24,22 +24,20 @@ func c_error(c *fiber.Ctx, message string, status_code int) error {
 
 }
 
-func NewQuestionResponse(question *protobufMessages.Question, answers []*protobufMessages.Answer) *protobufMessages.GetQuestionResponse {
+func NewQuestionResponse(question *protobufMessages.Question, answers []*protobufMessages.Answer) protobufMessages.GetQuestionResponse {
 	var parsed_answers []*protobufMessages.Answer
 
 	for _, answer := range answers {
 		parsed_answers = append(parsed_answers, &protobufMessages.Answer{Id: answer.Id, QuestionId: answer.QuestionId, Answer: answer.Answer})
 	}
 
-	return &protobufMessages.GetQuestionResponse{Question: question, Answers: parsed_answers}
+	return protobufMessages.GetQuestionResponse{Question: question, Answers: parsed_answers}
 }
 
 func main() {
 	fmt.Println("Starting...")
 
 	// Open connection with the database
-
-	// defer db.Close()
 
 	app := fiber.New()
 
@@ -50,11 +48,16 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		db.SetMaxOpenConns(9)
+		db.SetMaxIdleConns(3)
+		defer db.Close()
 		c.Locals("db", db)
 		return c.Next()
 	})
 
 	app.Post("/startRun", startRun)
+	app.Get("/getRuns", getRuns)
+	app.Post("/endRun", endRun)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to millionaires!")
@@ -63,6 +66,7 @@ func main() {
 	// Gets a random question of a specified difficulty
 	// TODO: Phrase error messages better
 	app.Get("/question", getQuestion)
+	app.Post("/answerQuestion", answerQuestion)
 
 	log.Fatal(app.Listen(":9090"))
 }

@@ -12,17 +12,21 @@ message Question{
     int32 impressions = 4;
 }
 
-//GetQuestion 
-message GetQuestionRequest{
-   int32 runId = 1;    
-}
-message GetQuestionResponse{
+
+
+
+message GetQuestionResponse {
     Question question = 1;
     repeated Answers.Answer answers = 2;
 }
 
-message QuestionResponse {
+
+
+message AnswerQuestionRequest{
     int32 id = 1;
-    string question = 2;
-    repeated Answers.Answer answers = 3;
+}
+
+message AnswerQuestionResponse{
+    bool isCorrect = 1;
+    optional GetQuestionResponse nextQuestion = 2;
 }

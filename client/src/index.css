@@ -15,6 +15,75 @@
 
 	/* button gradient */
 	--primaryGradient: linear-gradient(90deg, rgba(109, 67, 144, 1) 0%, rgba(185, 96, 216, 1) 100%);
+	--secondaryGradient: linear-gradient(90deg, rgba(229, 158, 239, 1) 0%, rgba(185, 96, 216, 1) 100%);
+
+	--text-50: hsl(243, 69%, 95%);
+	--text-100: hsl(243, 69%, 90%);
+	--text-200: hsl(243, 69%, 80%);
+	--text-300: hsl(243, 69%, 70%);
+	--text-400: hsl(243, 69%, 60%);
+	--text-500: hsl(243, 69%, 50%);
+	--text-600: hsl(243, 69%, 40%);
+	--text-700: hsl(243, 69%, 30%);
+	--text-800: hsl(243, 69%, 20%);
+	--text-900: hsl(243, 69%, 10%);
+	--text-950: hsl(243, 69%, 5%);
+
+	--background-50: hsl(240, 68%, 95%);
+	--background-100: hsl(240, 69%, 90%);
+	--background-200: hsl(240, 67%, 80%);
+	--background-300: hsl(240, 67%, 70%);
+	--background-400: hsl(240, 67%, 60%);
+	--background-500: hsl(240, 67%, 50%);
+	--background-600: hsl(240, 67%, 40%);
+	--background-700: hsl(240, 67%, 30%);
+	--background-800: hsl(240, 67%, 20%);
+	--background-900: hsl(240, 69%, 10%);
+	--background-950: hsl(240, 68%, 5%);
+
+	--primary-50: hsl(246, 77%, 95%);
+	--primary-100: hsl(243, 76%, 90%);
+	--primary-200: hsl(244, 76%, 80%);
+	--primary-300: hsl(244, 76%, 70%);
+	--primary-400: hsl(244, 77%, 60%);
+	--primary-500: hsl(244, 77%, 50%);
+	--primary-600: hsl(244, 77%, 40%);
+	--primary-700: hsl(244, 76%, 30%);
+	--primary-800: hsl(244, 76%, 20%);
+	--primary-900: hsl(243, 76%, 10%);
+	--primary-950: hsl(243, 77%, 5%);
+
+	--secondary-50: hsl(279, 68%, 95%);
+	--secondary-100: hsl(279, 69%, 90%);
+	--secondary-200: hsl(280, 69%, 80%);
+	--secondary-300: hsl(280, 69%, 70%);
+	--secondary-400: hsl(280, 68%, 60%);
+	--secondary-500: hsl(280, 68%, 50%);
+	--secondary-600: hsl(280, 68%, 40%);
+	--secondary-700: hsl(280, 69%, 30%);
+	--secondary-800: hsl(280, 69%, 20%);
+	--secondary-900: hsl(279, 69%, 10%);
+	--secondary-950: hsl(282, 68%, 5%);
+
+	--accent-50: hsl(330, 85%, 95%);
+	--accent-100: hsl(329, 84%, 90%);
+	--accent-200: hsl(330, 86%, 80%);
+	--accent-300: hsl(330, 86%, 70%);
+	--accent-400: hsl(330, 86%, 60%);
+	--accent-500: hsl(330, 86%, 50%);
+	--accent-600: hsl(330, 86%, 40%);
+	--accent-700: hsl(330, 86%, 30%);
+	--accent-800: hsl(330, 86%, 20%);
+	--accent-900: hsl(329, 84%, 10%);
+	--accent-950: hsl(330, 85%, 5%);
+
+	--linearPrimarySecondary: linear-gradient(hsl(244, 77%, 35%), hsl(280, 68%, 35%));
+	--linearPrimaryAccent: linear-gradient(hsl(244, 77%, 35%), hsl(330, 86%, 56%));
+	--linearSecondaryAccent: linear-gradient(hsl(280, 68%, 35%), hsl(330, 86%, 56%));
+	--radialPrimarySecondary: radial-gradient(hsl(244, 77%, 35%), hsl(280, 68%, 35%));
+	--radialPrimaryAccent: radial-gradient(hsl(244, 77%, 35%), hsl(330, 86%, 56%));
+	--radialSecondaryAccent: radial-gradient(hsl(280, 68%, 35%), hsl(330, 86%, 56%));
+
 	* {
 		margin: 0;
 		padding: 0;

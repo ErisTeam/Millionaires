@@ -5,11 +5,75 @@ import (
 	"fmt"
 	"log"
 	"millionairesServer/protobufMessages"
+	"net/http"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/protobuf/proto"
 )
+
+func getQuestionFromDB(c *fiber.Ctx, difficulty int) (protobufMessages.GetQuestionResponse, error) {
+	log.Println("Difficulty: ", difficulty)
+	var db = c.Locals("db").(*sql.DB)
+	println(db.Ping())
+	// Insert the values
+	random_question_row, err := db.Query("SELECT * FROM questions WHERE questions.difficulty = ? ORDER BY RANDOM() LIMIT 1;", difficulty)
+	if err != nil {
+		return protobufMessages.GetQuestionResponse{}, err
+	}
+
+	// Execute the query
+	row_result := random_question_row.Next()
+	if row_result == false {
+		err = random_question_row.Err()
+		if err != nil {
+			return protobufMessages.GetQuestionResponse{}, err
+		} else {
+			return protobufMessages.GetQuestionResponse{}, fmt.Errorf("Error while fetching SQL row result: `No rows returned`")
+		}
+	}
+
+	// Insert row values into a struct
+	var random_question protobufMessages.Question
+	err = random_question_row.Scan(&random_question.Id, &random_question.Question, &random_question.Difficulty, &random_question.Impressions)
+	if err != nil {
+		return protobufMessages.GetQuestionResponse{}, err
+	}
+	// random_question_stmt.Close()
+
+	// Prepare SQL for retriving answers to a question
+	answers_stmt, err := db.Prepare("SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == ? ORDER BY RANDOM();")
+	if err != nil {
+		return protobufMessages.GetQuestionResponse{}, err
+	}
+
+	// Insert the values
+	answer_rows, err := answers_stmt.Query(random_question.Id)
+	if err != nil {
+		return protobufMessages.GetQuestionResponse{}, err
+	}
+	// answers_stmt.Close()
+
+	// Execute the query and save the result as an array of `Answer` structs
+	var answers []*protobufMessages.Answer
+	for i := 0; answer_rows.Next() && i < 4; i++ {
+		// Insert row values into a struct
+		answer := &protobufMessages.Answer{}
+		err = answer_rows.Scan(&answer.Id, &answer.QuestionId, &answer.Answer, &answer.IsCorrect, &answer.Chosen)
+		answers = append(answers, answer)
+		if err != nil {
+			return protobufMessages.GetQuestionResponse{}, err
+		}
+	}
+
+	err = answer_rows.Err()
+	if err != nil {
+		return protobufMessages.GetQuestionResponse{}, err
+	}
+	output := NewQuestionResponse(&random_question, answers)
+	return output, nil
+
+}
 
 // Routes related to questions and answers
 func getQuestion(c *fiber.Ctx) error {
@@ -31,76 +95,96 @@ func getQuestion(c *fiber.Ctx) error {
 
 	log.Printf("Sending a random question of `difficulty` = `%d`", difficulty)
 
-	var db = c.Locals("db").(*sql.DB)
-	println(db.Ping())
-
-	// Prepare SQL for retriving a random question
-	random_question_stmt, err := db.Prepare("SELECT * FROM questions WHERE questions.difficulty = ? ORDER BY RANDOM() LIMIT 1;")
+	output, err := getQuestionFromDB(c, difficulty)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while preparing SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(c, fmt.Sprintf("Error while getting a random question: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
-	// Insert the values
-	random_question_row, err := random_question_stmt.Query(difficulty)
+	proto_out, err := proto.Marshal(&output)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while querying SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
+		log.Fatalln(err)
 	}
+	log.Printf("Succesfully processed a request for a random question of `difficulty` = `%d`", difficulty)
+	return c.Status(http.StatusOK).Send(proto_out)
+}
 
-	// Execute the query
-	row_result := random_question_row.Next()
-	if row_result == false {
-		err = random_question_row.Err()
-		if err != nil {
-			return c_error(c, fmt.Sprintf("Error while fetching SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
-		} else {
-			return c_error(c, fmt.Sprintf("Error while fetching SQL row result: `No results for difficulty of %d`", difficulty), fiber.ErrInternalServerError.Code)
-		}
-	}
-
-	// Insert row values into a struct
-	var random_question protobufMessages.Question
-	err = random_question_row.Scan(&random_question.Id, &random_question.Question, &random_question.Difficulty, &random_question.Impressions)
+func answerQuestion(c *fiber.Ctx) error {
+	request := protobufMessages.AnswerQuestionRequest{}
+	err := proto.Unmarshal(c.Body(), &request)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while getting values from the SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
-	}
-	// random_question_stmt.Close()
-
-	// TODO: Querying answers
-	// Prepare SQL for retriving answers to a question
-	answers_stmt, err := db.Prepare("SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == ? ORDER BY RANDOM();")
-	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while preparing SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(c, fmt.Sprintf("Error while parsing request body: `%s`", err), fiber.ErrBadRequest.Code)
 	}
 
-	// Insert the values
-	answer_rows, err := answers_stmt.Query(random_question.Id)
+	db := c.Locals("db").(*sql.DB)
+	row, err := db.Query("SELECT answers.id, answers.question_id, answers.answer, answers.is_correct, answers.chosen, questions.difficulty FROM answers JOIN questions ON answers.question_id = questions.id WHERE answers.id = ?", request.Id)
 	if err != nil {
 		return c_error(c, fmt.Sprintf("Error while querying SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
-	// answers_stmt.Close()
 
-	// Execute the query and save the result as an array of `Answer` structs
-	var answers []*protobufMessages.Answer
-	for i := 0; answer_rows.Next() && i < 4; i++ {
-		// Insert row values into a struct
-		answer := &protobufMessages.Answer{}
-		err = answer_rows.Scan(&answer.Id, &answer.QuestionId, &answer.Answer, &answer.IsCorrect, &answer.Chosen)
-		answers = append(answers, answer)
+	var answer protobufMessages.Answer
+	if row.Next() {
+		err = row.Scan(&answer.Id, &answer.QuestionId, &answer.Answer, &answer.IsCorrect, &answer.Chosen, &answer.Difficulty)
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while getting values from the SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
 	}
 
-	err = answer_rows.Err()
+	println(row.Close())
+
+	update, err := db.Exec("UPDATE answers SET chosen = ((SELECT answers.chosen FROM answers WHERE id = ?)+1) WHERE id = ?", request.Id, request.Id)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while fetching SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(c, fmt.Sprintf("Error while incrementing analytics: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
-	log.Printf("Succesfully processed a request for a random question of `difficulty` = `%d`", difficulty)
+	affected, err := update.RowsAffected()
+	if err != nil {
+		return c_error(c, fmt.Sprintf("Error while getting affected rows: `%s`", err), fiber.ErrInternalServerError.Code)
+	}
 
-	proto_out, err := proto.Marshal(NewQuestionResponse(&random_question, answers))
+	if affected == 0 {
+		return c_error(c, "Error while updating analytics: `No rows affected`", fiber.ErrInternalServerError.Code)
+	}
+
+	if answer.IsCorrect && (*answer.Difficulty < int32(12)) {
+		output, err := getQuestionFromDB(c, int(*answer.Difficulty)+1)
+		if err != nil {
+			return c_error(c, fmt.Sprintf("Error while getting a random question: `%s`", err), fiber.ErrInternalServerError.Code)
+		}
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+		response := protobufMessages.AnswerQuestionResponse{
+			IsCorrect:    true,
+			NextQuestion: &output,
+		}
+		proto_out, err := proto.Marshal(&response)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		return c.Status(http.StatusOK).Send(proto_out)
+
+		//TODO: Send the next question
+	}
+	if answer.IsCorrect {
+		response := protobufMessages.AnswerQuestionResponse{
+			IsCorrect: true,
+		}
+		proto_out, err := proto.Marshal(&response)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		return c.Status(http.StatusOK).Send(proto_out)
+	}
+	response := protobufMessages.AnswerQuestionResponse{
+		IsCorrect: false,
+	}
+	proto_out, err := proto.Marshal(&response)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return c.Send(proto_out)
+
+	return c.Status(http.StatusOK).Send(proto_out)
+
 }

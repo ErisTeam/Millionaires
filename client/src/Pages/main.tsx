@@ -1,22 +1,19 @@
 import 'solid-devtools';
 import style from './main.module.css';
-import { IconDiamondFilled, IconDiamondsFilled } from '@tabler/icons-solidjs';
+import { IconDiamondFilled, IconDiamondsFilled, IconUsersGroup, IconRobot, IconPhoneCall } from '@tabler/icons-solidjs';
 
 export default function App() {
 	return (
 		<div class={style.container}>
-			<div class={style.questionInfo}>
-				<div class={style.kola}>
-					<h5>koło 1</h5>
-					<h5>koło 2</h5>
-					<h5>koło 3</h5>
-				</div>
-			</div>
-
 			<div class={style.game}>
-				<div class={style.ai}></div>
+				<div class={style.ai}>
+					<div class={style.host}></div>
+					<div class={style.questionImg}></div>
+				</div>
 				<div class={style.question}>
-					<h3 class={style.hexagon}>Czy Gami to Furras?</h3>
+					<h3 class={style.hexagon}>
+						Bardzo długie pytanie retoryczne na temat, którym jest furrasowość Gamiego. Czy Gami to Furras?
+					</h3>
 					<ol class={style.buttons}>
 						<li>
 							<button class={style.hexagon}>
@@ -42,19 +39,48 @@ export default function App() {
 			</div>
 			<div class={style.ladder}>
 				<ol>
-					<li>1 X</li>
-					<li>2 X</li>
-					<li>3 X</li>
-					<li>4 X</li>
-					<li>5 X</li>
-					<li>6 X</li>
-					<li>7 X</li>
-					<li>8 X</li>
-					<li>9 X</li>
-					<li>10 X</li>
-					<li>11 X</li>
-					<li>12 X</li>
+					<li>
+						<IconDiamondFilled /> 1 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 2 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 3 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 4 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 5 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 6 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 7 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 8 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 9 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 10 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 11 X
+					</li>
+					<li>
+						<IconDiamondFilled /> 12 X
+					</li>
 				</ol>
+				<div class={style.gameInfo}>
+					<IconPhoneCall />
+					<IconRobot />
+					<IconUsersGroup />
+				</div>
 			</div>
 		</div>
 	);
