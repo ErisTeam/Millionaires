@@ -1,6 +1,6 @@
-import { ANSWER_QUESTION_ENDPOINT, GET_QUESTIONS_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT } from './constants';
+import { ANSWER_QUESTION_ENDPOINT, GET_QUESTIONS_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT, END_RUN_ENDPOINT } from './constants';
 import { AnswerQuestionRequest, AnswerQuestionResponse, GetQuestionResponse } from './protobufMessages/Questions';
-import { StartRunRequest, StartRunResponse, GetRunsResponse, EndRunRequest } from './protobufMessages/Run';
+import { StartRunRequest, StartRunResponse, GetRunsResponse, EndRunRequest, EndRunResponse } from './protobufMessages/Run';
 
 export default () => {
 	async function startRunTest() {
@@ -20,12 +20,14 @@ export default () => {
 		let a = EndRunRequest.create();
 		a.SnowflakeId = '1';
 		let res = await (
-			await fetch(START_RUN_ENDPOINT('Daniel'), {
+			await fetch(END_RUN_ENDPOINT, {
 				method: 'POST',
 				body: EndRunRequest.encode(a).finish(),
 			})
 		).arrayBuffer();
 		console.log(res);
+		let b = EndRunResponse.decode(new Uint8Array(res));
+		console.log(b);
 	}
 	async function getRunsTest() {
 		let res = await fetch(GET_RUNS_ENDPOINT);
@@ -39,7 +41,7 @@ export default () => {
 		let resUint8 = new Uint8Array(await res.arrayBuffer());
 		let resDecoded = GetQuestionResponse.decode(resUint8);
 
-		console.log(resDecoded);
+		console.log(resUint8, resDecoded);
 	}
 	async function answerQuestionFail() {
 		let reqBody = AnswerQuestionRequest.create();
@@ -76,6 +78,15 @@ export default () => {
 				}}
 			>
 				Test Start Run
+			</button>
+			<button
+				style={{ color: 'black' }}
+				onClick={(e) => {
+					e.preventDefault();
+					endRunTest();
+				}}
+			>
+				Test End Run
 			</button>
 			<button
 				style={{ color: 'black' }}

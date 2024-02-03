@@ -27,16 +27,10 @@ func startRun(ctx *fiber.Ctx) error {
 	snowflake := newSnowflake(SF_RUN)
 
 	var response = protobufMessages.StartRunResponse{}
-	response.SnowflakeId = snowflake.ID
+	response.SnowflakeId = strconv.FormatInt(snowflake.ID, 10)
 	out, err := proto.Marshal(&response)
 
-	run_stmt, err := db.Prepare("INSERT INTO runs (snowflake_id, name, used_lifelines) VALUES (?, ?, 0);")
-	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Unable to start the run: `%s`", err), fiber.ErrInternalServerError.Code)
-	}
-
-	_, err = run_stmt.Exec(snowflake, request.Name)
-
+	_, err = db.Exec("INSERT INTO runs (snowflake_id, name, used_lifelines, ended) VALUES (?, ?, 0, false);", snowflake.ID, request.Name)
 	if err != nil {
 		return c_error(ctx, fmt.Sprintf("Unable to start the run: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
@@ -55,12 +49,15 @@ func getRuns(ctx *fiber.Ctx) error {
 	if err != nil {
 		c_error(ctx, fmt.Sprintf("Unable to get runs: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
+    defer run_rows.Close()
 
 	var response = protobufMessages.GetRunsResponse{}
 	for run_rows.Next() {
 		run := protobufMessages.Run{}
 		run_rows.Scan(&run.SnowflakeId, &run.Name, &run.UsedLifelines, &run.Ended)
-		response.Runs = append(response.Runs, &run)
+        if (run.Ended) {
+            response.Runs = append(response.Runs, &run)
+        }
 	}
 
 	out, err := proto.Marshal(&response)
@@ -90,13 +87,29 @@ func endRun(ctx *fiber.Ctx) error {
 
 	logger.Printf("Ending a run with id `%d`\n", snowflake)
 
-	_, err = db.Exec("UPDATE runs SET ended = true WHERE snowflake_id == ?", snowflake)
+    update, err := db.Exec("UPDATE runs SET ended = true WHERE snowflake_id == ? AND ended <> true", snowflake)
 	if err != nil {
 		return c_error(ctx, fmt.Sprintf("Error while trying to update the runs' state: `%s`", err.Error()), fiber.ErrBadRequest.Code)
 	}
 
-	logger.Printf("Run with id `%d` successfully ended\n", snowflake)
+    affected, err := update.RowsAffected()
+    if err != nil {
+		return c_error(ctx, fmt.Sprintf("Error while retriving affected rows: `%s`", err.Error()), fiber.ErrBadRequest.Code)
+    }
 
-	var out []byte
+    var response protobufMessages.EndRunResponse
+    response.RunAffected = true
+    if affected == 0 {
+        response.RunAffected = false
+        logger.Printf("Run with id `%d` already ended\n", snowflake)
+    } else {
+        logger.Printf("Run with id `%d` successfully ended\n", snowflake)
+    }
+
+	out, err := proto.Marshal(&response)
+	if err != nil {
+		c_error(ctx, fmt.Sprintf("Run ended, unable to encode response as bytes: `%s`", err), fiber.ErrInternalServerError.Code)
+	}
+
 	return ctx.Status(http.StatusOK).Send(out)
 }

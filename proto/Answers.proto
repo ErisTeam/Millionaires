@@ -6,9 +6,9 @@ package millionaires.Answers;
 message Answer{
     int32 id = 1;
     string answer = 2;
-    int32 questionId = 3;
-    bool isCorrect = 4;
-    int32 chosen = 5;
+    optional int32 questionId = 3;
+    optional bool isCorrect = 4;
+    optional int32 chosen = 5;
     optional int32 difficulty = 6;
 }
 

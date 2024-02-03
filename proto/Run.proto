@@ -15,16 +15,17 @@ message Run {
 message StartRunRequest{
     string Name = 1;
 }
-//uzyj stringa na snowlfake bo inaczej ci sie bedzie wypierdalac po froncie bo jakis customowy typ ma zjebany ktorego niemzna requireowac @Frytak
-// tutaj pietruszka robiła ten typ
 
-//nie ja dałam RunId anie SnowflakeId więc ktos cos 
-// bo zmieniłem nazwe samą z RunId na SnowflakeId, ale typu nie ruszałem
 message StartRunResponse{
     string SnowflakeId = 1;
 }
+
 message EndRunRequest {
     string SnowflakeId = 1;
+}
+
+message EndRunResponse {
+    bool RunAffected = 1;
 }
 
 //Get runs response

@@ -21,6 +21,7 @@ func getQuestionFromDB(c *fiber.Ctx, difficulty int) (protobufMessages.GetQuesti
 	if err != nil {
 		return protobufMessages.GetQuestionResponse{}, err
 	}
+    defer random_question_row.Close()
 
 	// Execute the query
 	row_result := random_question_row.Next()
@@ -39,27 +40,20 @@ func getQuestionFromDB(c *fiber.Ctx, difficulty int) (protobufMessages.GetQuesti
 	if err != nil {
 		return protobufMessages.GetQuestionResponse{}, err
 	}
-	// random_question_stmt.Close()
-
-	// Prepare SQL for retriving answers to a question
-	answers_stmt, err := db.Prepare("SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == ? ORDER BY RANDOM();")
-	if err != nil {
-		return protobufMessages.GetQuestionResponse{}, err
-	}
 
 	// Insert the values
-	answer_rows, err := answers_stmt.Query(random_question.Id)
+	answer_rows, err := db.Query("SELECT answers.id, answers.answer FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == ? ORDER BY RANDOM();", random_question.Id)
 	if err != nil {
 		return protobufMessages.GetQuestionResponse{}, err
 	}
-	// answers_stmt.Close()
+    defer answer_rows.Close()
 
 	// Execute the query and save the result as an array of `Answer` structs
 	var answers []*protobufMessages.Answer
 	for i := 0; answer_rows.Next() && i < 4; i++ {
 		// Insert row values into a struct
 		answer := &protobufMessages.Answer{}
-		err = answer_rows.Scan(&answer.Id, &answer.QuestionId, &answer.Answer, &answer.IsCorrect, &answer.Chosen)
+		err = answer_rows.Scan(&answer.Id, &answer.Answer)
 		answers = append(answers, answer)
 		if err != nil {
 			return protobufMessages.GetQuestionResponse{}, err
@@ -120,6 +114,7 @@ func answerQuestion(c *fiber.Ctx) error {
 	if err != nil {
 		return c_error(c, fmt.Sprintf("Error while querying SQL statement: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
+    defer row.Close()
 
 	var answer protobufMessages.Answer
 	if row.Next() {
@@ -128,8 +123,6 @@ func answerQuestion(c *fiber.Ctx) error {
 			return c_error(c, fmt.Sprintf("Error while getting values from the SQL row result: `%s`", err), fiber.ErrInternalServerError.Code)
 		}
 	}
-
-	println(row.Close())
 
 	update, err := db.Exec("UPDATE answers SET chosen = ((SELECT answers.chosen FROM answers WHERE id = ?)+1) WHERE id = ?", request.Id, request.Id)
 	if err != nil {
@@ -145,7 +138,7 @@ func answerQuestion(c *fiber.Ctx) error {
 		return c_error(c, "Error while updating analytics: `No rows affected`", fiber.ErrInternalServerError.Code)
 	}
 
-	if answer.IsCorrect && (*answer.Difficulty < int32(12)) {
+	if *answer.IsCorrect && (*answer.Difficulty < int32(12)) {
 		output, err := getQuestionFromDB(c, int(*answer.Difficulty)+1)
 		if err != nil {
 			return c_error(c, fmt.Sprintf("Error while getting a random question: `%s`", err), fiber.ErrInternalServerError.Code)
@@ -166,7 +159,7 @@ func answerQuestion(c *fiber.Ctx) error {
 
 		//TODO: Send the next question
 	}
-	if answer.IsCorrect {
+	if *answer.IsCorrect {
 		response := protobufMessages.AnswerQuestionResponse{
 			IsCorrect: true,
 		}
