@@ -1,0 +1,46 @@
+.answerButton {
+	position: relative;
+	height: 2.5em;
+	transition: all 0.25s ease-in-out;
+	cursor: pointer;
+	border: none;
+	background: transparent;
+	font-size: 1.5em;
+	font-weight: bold;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	width: 100%;
+
+	position: relative;
+	z-index: 2;
+
+	transition: visibility 0.25s ease-in-out;
+
+	&.hide {
+		> span {
+			visibility: hidden;
+		}
+	}
+
+	.hexagon {
+		width: 100%;
+		position: absolute;
+		z-index: -1;
+		height: 100%;
+
+		stroke: var(--accent-500);
+		stroke-width: 4px;
+		fill: var(--primary-800);
+		transition: inherit;
+	}
+	.marker {
+	}
+}
+.answerButton:not(:disabled):hover {
+	.hexagon {
+		fill: var(--primary-400);
+	}
+}

@@ -1,0 +1,35 @@
+.question {
+	font-size: 1.5em;
+	width: 100%;
+	height: fit-content;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.25em 3.5em;
+
+	position: relative;
+
+	--stroke: var(--accent-500);
+
+	.hexagon {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		z-index: -1;
+
+		stroke: var(--stroke);
+		stroke-width: 4px;
+		fill: var(--primary-800);
+	}
+	&::before {
+		z-index: -1;
+		content: '';
+		position: absolute;
+		width: 120%;
+		left: -10%;
+		height: 4px;
+		background: var(--stroke);
+		top: 50%;
+		transform: translateY(-50%);
+	}
+}

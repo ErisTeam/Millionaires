@@ -5,8 +5,8 @@ option go_package = "protobufMessages/";
 package millionaires.Run;
 
 message Run {
-    string SnowflakeId = 1;
-    string Name = 2;
+    string SnowflakeId = 1; //TODO: change name
+    string Name = 2; 
     int32 UsedLifelines = 3;
     bool Ended = 4;
 }
@@ -17,15 +17,15 @@ message StartRunRequest{
 }
 
 message StartRunResponse{
-    string SnowflakeId = 1;
+    string SnowflakeId = 1; //TODO: change name
 }
 
 message EndRunRequest {
-    string SnowflakeId = 1;
+    string SnowflakeId = 1; //TODO: change name
 }
 
 message EndRunResponse {
-    bool RunAffected = 1;
+    bool RunAffected = 1; 
 }
 
 //Get runs response

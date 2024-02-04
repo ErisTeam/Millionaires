@@ -1,0 +1,117 @@
+.ladder {
+	z-index: 10;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.75em;
+	grid-area: ladder;
+
+	position: relative;
+	background: var(--background-950);
+	& > ol {
+		list-style: none;
+		min-width: fit-content;
+		width: 100%;
+
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.25em;
+		padding: 0.5em;
+	}
+	.question {
+		list-style: none;
+		align-items: center;
+		justify-items: center;
+
+		display: flex;
+		width: inherit;
+		/* min-width: 100px; */
+		text-align: right;
+		padding-left: 1em;
+		padding-right: 3em;
+		border-radius: 0.5em;
+		position: relative;
+
+		display: grid;
+
+		grid-template-columns: 1.5em 1em 1.5fr;
+
+		&.answered {
+			.diamond {
+				visibility: visible;
+			}
+		}
+
+		&.currentQuestion {
+			.hexagon {
+				fill: var(--accent-500);
+				stroke: var(--secondary-200);
+				scale: 1.1;
+			}
+		}
+
+		.diamond {
+			visibility: hidden;
+		}
+
+		.hexagon {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			z-index: -1;
+			stroke: var(--accent-400);
+			stroke-width: 3px;
+			fill: var(--secondary-900);
+		}
+		.game {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-direction: column;
+			width: 100%;
+			padding-top: 1em;
+			max-width: 800px;
+			height: 100%;
+		}
+	}
+
+	.lifeLinesContainer {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		gap: 1em;
+		height: 2.5em;
+
+		padding-bottom: 5em;
+
+		> .lifeLine {
+			height: inherit;
+			aspect-ratio: 1/1;
+			width: 2.5em;
+			stroke: var(--text-50);
+			/* stroke: var(rgb(123, 101, 141)); */
+			background-color: var(--secondary-600);
+			border-radius: 50%;
+			padding: 0.25em;
+			transition: all 0.25s ease-in-out;
+			cursor: pointer;
+			border: 4px solid var(--accent-500);
+
+			&.used {
+				background-color: var(--accent-900);
+				opacity: 0.5;
+				scale: 0.9;
+			}
+		}
+		> .lifeLine:not(.used):hover {
+			scale: 1.05;
+			transition: all 0.25s ease-in-out;
+			transform: rotateZ(5deg);
+		}
+	}
+}
