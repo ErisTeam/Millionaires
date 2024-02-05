@@ -10,8 +10,18 @@ import style from './ProgressTracker.module.css';
 import { For, createSignal } from 'solid-js';
 import Hexagon from '../Hexagon/Hexagon';
 
+type QuestionInfo = {
+	answered: boolean;
+	value: number;
+};
+
 export default () => {
-	const [questionsStatus, setQuestionsStatus] = createSignal([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+	const [questionsStatus, setQuestionsStatus] = createSignal<QuestionInfo[]>(
+		new Array(12).fill(0).map((_, index) => ({
+			answered: index < 4,
+			value: Math.floor(0.5 * (index + 1) * 10000 * (index + 1 * 0.2)),
+		})),
+	);
 	console.log(questionsStatus());
 	return (
 		<div class={style.ladder}>
@@ -28,20 +38,20 @@ export default () => {
 			<ol>
 				<For each={questionsStatus()}>
 					{(v, index) => {
-						const currentQuestion = (index() == 0 && v == 0) || (questionsStatus()[index() - 1] == 1 && v == 0);
+						const currentQuestion =
+							(index() == 0 && !v.answered) || (questionsStatus()[index() - 1]?.answered && !v.answered);
 						return (
 							<li
 								class={style.question}
 								classList={{
-									[style.answered]: v == 1,
+									[style.answered]: v.answered,
 									[style.currentQuestion]: currentQuestion,
 								}}
 							>
 								<Hexagon class={style.hexagon} />
 								{index() + 1}
 								{currentQuestion ? <IconDiamonds /> : <IconDiamondsFilled class={style.diamond} />}
-
-								{Math.floor(0.5 * (index() + 1) * 10000 * (index() + 1 * 0.2))}
+								{v.value}
 							</li>
 						);
 					}}

@@ -1,0 +1,51 @@
+.lifeLine {
+	display: flex;
+
+	width: 15em;
+	height: 10em;
+
+	border: 2px solid var(--accent-700);
+	border-radius: 14px;
+	padding: 0.5em;
+
+	ol {
+		list-style: none;
+		display: flex;
+		flex-direction: row;
+
+		gap: 1em;
+
+		padding-top: 1em;
+	}
+
+	.c {
+		display: grid;
+		grid-template-rows: 1fr 0.2fr;
+
+		width: 1.5em;
+
+		.p {
+			position: relative;
+
+			&::after {
+				transition: height 0.5s ease-in-out;
+				content: '';
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				width: 100%;
+				height: var(--percentage, 1%);
+				background: red;
+			}
+			& > span {
+				transition: top 0.5s ease-in-out;
+				font-size: 0.8em;
+				/* content: '10%'; */
+				position: absolute;
+				top: calc(100% - var(--percentage, 1%) - 15%);
+				/* left: 50%; */
+				/* transform: translateX(-50%) translateY(100% - var(--percent)); */
+			}
+		}
+	}
+}

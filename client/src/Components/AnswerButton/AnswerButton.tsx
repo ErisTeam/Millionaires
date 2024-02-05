@@ -1,7 +1,6 @@
 import { Answer } from '@/protobufMessages/Answers';
 import style from './AnswerButton.module.css';
 import Hexagon from '../Hexagon/Hexagon';
-import { IconDiamondsFilled } from '@tabler/icons-solidjs';
 
 type AnswerButtonProps = {
 	onClick: (answer: Answer) => void;

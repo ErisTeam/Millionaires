@@ -1,8 +1,8 @@
 .container {
 	width: 100vw;
-	height: 100vh;
+	min-height: 100vh;
 	display: grid;
-	grid-template-columns: 1fr 300px;
+	grid-template-columns: 1fr 0.3fr;
 	place-items: center;
 	grid-template-areas: 'game ladder';
 }
@@ -10,7 +10,7 @@
 .game {
 	z-index: 1;
 	display: grid;
-	border-right: 2px solid var(--accent-200);
+	border-right: 2px solid var(--secondary-500);
 
 	grid-template-rows: 1fr 0.7fr;
 	grid-template-areas: 'ai' 'question';
@@ -83,7 +83,7 @@
 					width: 120%;
 					left: -10%;
 					height: 4px;
-					background: var(--accent-500);
+					background: var(--secondary-500);
 					top: 50%;
 					transform: translateY(-50%);
 				}

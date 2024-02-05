@@ -31,7 +31,7 @@
 		z-index: -1;
 		height: 100%;
 
-		stroke: var(--accent-500);
+		stroke: var(--secondary-500);
 		stroke-width: 4px;
 		fill: var(--primary-800);
 		transition: inherit;
