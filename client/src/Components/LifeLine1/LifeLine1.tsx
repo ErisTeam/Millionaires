@@ -57,9 +57,9 @@ export default () => {
 					const votes = new Array(percentages().length).fill(0);
 					votes[Math.floor(Math.random() * votes.length)] = Math.floor(Math.random() * 100);
 					let i = 0;
-					const weights = [[8, 1, 2, 3]];
+					const weights = [[3.5, 1, 2, 3]];
 					const a = () => {
-						weights.push(new Array(4).fill(0).map(() => Math.random() * 10));
+						// weights.push(new Array(4).fill(0).map(() => Math.random() * 10));
 						// for (let i = 0; i < 5000; i++) {
 						console.log(weightedRandom([1, 9]));
 						const vote = weightedRandom(
@@ -74,7 +74,9 @@ export default () => {
 						const votesSum = votes.reduce((a, b) => a + b, 0);
 						const calculatedPercentages = votes.map((v) => Math.round((v / (votesSum || 1)) * 100));
 						console.log(votes, votesSum, calculatedPercentages);
-						setPercentages((prev) => prev.map((v, i) => ({ ...v, percentage: calculatedPercentages[i] })));
+						setPercentages((prev) =>
+							prev.map((v, i) => ({ ...v, percentage: Math.min(calculatedPercentages[i], 100) })),
+						);
 					};
 					let id = setInterval(a, 100);
 				}}

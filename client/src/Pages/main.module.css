@@ -4,7 +4,7 @@
 	display: grid;
 	grid-template-columns: 1fr 0.3fr;
 	place-items: center;
-	grid-template-areas: 'game ladder';
+	/* grid-template-areas: 'game ladder'; */
 }
 
 .game {

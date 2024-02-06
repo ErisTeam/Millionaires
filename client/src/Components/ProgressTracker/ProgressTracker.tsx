@@ -4,6 +4,7 @@ import {
 	IconDiamondsFilled,
 	IconPhoneCall,
 	IconRobot,
+	IconShieldHalfFilled,
 	IconUsersGroup,
 } from '@tabler/icons-solidjs';
 import style from './ProgressTracker.module.css';
@@ -19,7 +20,7 @@ export default () => {
 	const [questionsStatus, setQuestionsStatus] = createSignal<QuestionInfo[]>(
 		new Array(12).fill(0).map((_, index) => ({
 			answered: index < 4,
-			value: Math.floor(0.5 * (index + 1) * 10000 * (index + 1 * 0.2)),
+			value: 2 ** (index + 9),
 		})),
 	);
 	console.log(questionsStatus());
@@ -27,7 +28,7 @@ export default () => {
 		<div class={style.ladder}>
 			<div class={style.lifeLinesContainer}>
 				<IconUsersGroup class={style.lifeLine} />
-				<IconRobot
+				<IconShieldHalfFilled
 					class={style.lifeLine}
 					classList={{
 						[style.used]: true,
