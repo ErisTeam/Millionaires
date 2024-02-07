@@ -2,33 +2,47 @@
 	z-index: 10;
 	width: 100%;
 	height: 100%;
-	display: flex;
+	/* display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: center; */
 	align-items: center;
 	font-size: 1.75em;
+
+	border-left: 2px solid var(--secondary-500);
+
+	padding: 0.5em;
+
+	display: grid;
+	grid-template-rows: 5em 1fr;
+
 	/* grid-area: ladder; */
 
 	position: relative;
 	background: var(--background-950);
+	/*TODO: change to class*/
 	& > ol {
 		list-style: none;
 		min-width: fit-content;
 		width: 100%;
+		height: 100%;
 
 		display: flex;
+
 		flex-direction: column-reverse;
-		gap: 0.25em;
-		padding: 0.5em;
+
+		gap: 0.5em;
+		justify-content: flex-start;
 	}
 	.question {
 		list-style: none;
 		align-items: center;
 		justify-items: center;
 
-		display: flex;
 		width: inherit;
-		/* min-width: 100px; */
+		/* height: 1.7em; */
+
+		height: 100%;
+
 		text-align: right;
 		padding-left: 1em;
 		padding-right: 3em;
@@ -40,7 +54,7 @@
 		grid-template-columns: 1.5em 1em 1.5fr;
 
 		&.answered {
-			.diamond {
+			.diamondFilled {
 				visibility: visible;
 			}
 		}
@@ -49,15 +63,18 @@
 			.hexagon {
 				fill: var(--secondary-500);
 				stroke: var(--secondary-200);
-				/* left: -5%;
-				transform: translateX(2.5%);
-				width: 105%; */
+
 				scale: 1.05;
 			}
 		}
 
-		.diamond {
+		.diamondFilled {
 			visibility: hidden;
+		}
+
+		.diamond {
+			width: 1.2em;
+			height: 1.2em;
 		}
 
 		.hexagon {
@@ -71,16 +88,6 @@
 			stroke-width: 3px;
 			fill: var(--secondary-900);
 		}
-		.game {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			flex-direction: column;
-			width: 100%;
-			padding-top: 1em;
-			max-width: 800px;
-			height: 100%;
-		}
 	}
 
 	.lifeLinesContainer {
@@ -88,14 +95,20 @@
 		display: flex;
 		flex-direction: row;
 		gap: 1em;
-		height: 2.5em;
-
-		padding-bottom: 5em;
+		height: 100%;
+		width: 100%;
+		justify-content: center;
+		align-items: center;
+		padding-bottom: 1em;
 
 		> .lifeLine {
-			height: inherit;
 			aspect-ratio: 1/1;
-			width: 2.5em;
+			min-width: 2.5em;
+			min-height: 2.5em;
+
+			width: auto;
+			height: auto;
+
 			stroke: var(--text-50);
 			/* stroke: var(rgb(123, 101, 141)); */
 			background-color: var(--secondary-600);
@@ -115,6 +128,17 @@
 			scale: 1.05;
 			transition: all 0.25s ease-in-out;
 			transform: rotateZ(5deg);
+		}
+	}
+}
+@media (max-width: 768px) {
+	.ladder {
+		.question {
+			&.currentQuestion {
+				.hexagon {
+					scale: 1.03;
+				}
+			}
 		}
 	}
 }

@@ -1,0 +1,137 @@
+.container {
+	width: 100vw;
+	min-height: 100vh;
+	display: grid;
+	grid-template-columns: 1fr 0.3fr;
+	place-items: center;
+	/* grid-template-areas: 'game ladder'; */
+}
+
+.game {
+	z-index: 1;
+	display: grid;
+
+	grid-template-rows: 1fr 0.7fr;
+	grid-template-areas: 'ai' 'question';
+	width: 100%;
+	height: 100%;
+
+	/* background: url('../assets/backgroundnumbers.png'); */
+
+	background: var(--background-900);
+
+	padding-bottom: 2em;
+
+	.ai {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: row;
+		width: 100%;
+		height: 100%;
+		z-index: 2;
+		grid-area: ai;
+		gap: 1em;
+		.host {
+			background-image: url('../assets/host.png');
+		}
+		.questionImg {
+			background-image: url('../assets/questionImg.png');
+		}
+		.host,
+		.questionImg {
+			background-size: 100% 100%;
+
+			background-repeat: no-repeat;
+			width: 400px;
+			height: 400px;
+
+			border-radius: 1em;
+		}
+	}
+	.questionContainer {
+		grid-area: question;
+		text-align: center;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		overflow-x: hidden;
+
+		height: 100%;
+		padding-left: 1em;
+		padding-right: 1em;
+
+		.answers {
+			display: flex;
+			flex-direction: column;
+
+			gap: 0.5em;
+
+			padding-top: 1em;
+
+			list-style: none;
+
+			li {
+				position: relative;
+				display: flex;
+				justify-content: center;
+
+				gap: 0.1em;
+
+				&::before {
+					overflow: hidden;
+					content: '';
+					position: absolute;
+					width: 120%;
+					left: -10%;
+					height: 4px;
+					background: var(--secondary-500);
+					top: 50%;
+					transform: translateY(-50%);
+				}
+			}
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	.container {
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr 1fr;
+	}
+	.progressTracker {
+		grid-row: 1/2;
+		border-left: none !important;
+	}
+	.game {
+		grid-template-rows: 1fr;
+
+		.questionContainer {
+			grid-row: 2/2;
+			.answers {
+				li {
+					flex-direction: column;
+					gap: 0.5em;
+					&::before {
+						content: none !important;
+					}
+					button {
+						position: relative;
+						&::before {
+							content: '';
+							position: absolute;
+							width: 120%;
+							left: -10%;
+							height: 4px;
+							background: var(--secondary-500);
+							top: 50%;
+							z-index: -1;
+							transform: translateY(-50%);
+						}
+					}
+				}
+			}
+		}
+	}
+}

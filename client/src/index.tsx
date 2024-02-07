@@ -7,9 +7,9 @@ import './index.css';
 
 import { AppStateProvider, useAppState } from './AppState';
 
-import Main from './Pages/main';
-import ApiTest from './ApiTest';
-import StartPage from './Pages/start';
+import GamePage from './Pages/Game/Game';
+import ApiTest from './Pages/Dev/ApiTest';
+import HomePage from './Pages/Home/Home';
 const root = document.getElementById('root');
 function App() {
 	const AppState = useAppState();
@@ -17,9 +17,9 @@ function App() {
 	return (
 		<AppStateProvider>
 			<Router>
-				<Route path="/" component={Main} />
+				<Route path="/game" component={GamePage} />
 				<Route path="/apiTest" component={ApiTest} />
-				<Route path={'/start'} component={StartPage}></Route>
+				<Route path={'/'} component={HomePage}></Route>
 			</Router>
 		</AppStateProvider>
 	);

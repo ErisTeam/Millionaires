@@ -1,0 +1,36 @@
+.ConfirmationModal {
+	position: absolute;
+	width: 100%;
+
+	z-index: 5;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+
+	.button {
+		width: 10em;
+
+		min-height: 1.5em;
+	}
+	ol {
+		display: flex;
+		justify-content: center;
+		position: relative;
+		&::before {
+			overflow: hidden;
+			z-index: -1;
+			content: '';
+			position: absolute;
+			width: 120%;
+			left: -10%;
+			height: 4px;
+			background: var(--secondary-500);
+			top: 50%;
+			transform: translateY(-50%);
+		}
+		list-style-type: none;
+		display: flex;
+		flex-direction: row;
+		gap: 0.5em;
+	}
+}

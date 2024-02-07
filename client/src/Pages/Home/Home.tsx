@@ -1,4 +1,4 @@
-import style from './start.module.css';
+import style from './Home.module.css';
 export default function StartPage() {
 	return (
 		<div class={style.container}>

@@ -16,7 +16,7 @@ type QuestionInfo = {
 	value: number;
 };
 
-export default () => {
+export default (props: { class?: string }) => {
 	const [questionsStatus, setQuestionsStatus] = createSignal<QuestionInfo[]>(
 		new Array(12).fill(0).map((_, index) => ({
 			answered: index < 4,
@@ -25,7 +25,7 @@ export default () => {
 	);
 	console.log(questionsStatus());
 	return (
-		<div class={style.ladder}>
+		<div class={style.ladder + ' ' + props.class}>
 			<div class={style.lifeLinesContainer}>
 				<IconUsersGroup class={style.lifeLine} />
 				<IconShieldHalfFilled
@@ -51,7 +51,11 @@ export default () => {
 							>
 								<Hexagon class={style.hexagon} />
 								{index() + 1}
-								{currentQuestion ? <IconDiamonds /> : <IconDiamondsFilled class={style.diamond} />}
+								{currentQuestion ? (
+									<IconDiamonds class={style.diamond} />
+								) : (
+									<IconDiamondsFilled class={style.diamond + ' ' + style.diamondFilled} />
+								)}
 								{v.value}
 							</li>
 						);

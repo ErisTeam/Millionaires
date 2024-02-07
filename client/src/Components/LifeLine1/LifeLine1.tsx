@@ -57,7 +57,7 @@ export default () => {
 					const votes = new Array(percentages().length).fill(0);
 					votes[Math.floor(Math.random() * votes.length)] = Math.floor(Math.random() * 100);
 					let i = 0;
-					const weights = [[3.5, 1, 2, 3]];
+					const weights = [[1, 0.5, 1, 0.5]];
 					const a = () => {
 						// weights.push(new Array(4).fill(0).map(() => Math.random() * 10));
 						// for (let i = 0; i < 5000; i++) {
