@@ -36,4 +36,21 @@
 		fill: var(--primary-800);
 		transition: inherit;
 	}
+	.hexagon:hover {
+		fill: var(--primary-700);
+	}
+	.answering {
+		animation: answer 0.5s infinite 0s alternate;
+	}
+}
+
+@keyframes answer {
+	from {
+		fill: var(--primary-800);
+		stroke: var(--secondary-500);
+	}
+	to {
+		fill: var(--primary-600);
+		stroke: var(--secondary-400);
+	}
 }
