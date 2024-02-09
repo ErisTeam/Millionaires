@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package websocket;
+option go_package = "protobufMessages/";
+
+
+enum MessageType{
+    StartCall = 0;
+    EndCall = 1;
+    Message = 2;
+    
+    CallResponse = 3;
+    IncomingCall = 4;
+    IncomingCallResponse = 5;
+
+    Heartbeat = 6;
+    HeartbeatResponse = 7;
+
+    Identify = 8;
+}
+
+message WebsocketMessage{
+    MessageType type = 1;
+    oneof payload{
+        EmptyPayload empty = 2;
+        IdentifyPayload identify = 3;
+        MessagePayload message = 4;
+        CallResponsePayload callResponse = 5;
+        IncomingCallPayload incomingCall = 6;
+        IncomingCallResponsePayload incomingCallResponse = 7;
+       
+        IdentifyResponsePayload identifyResponse = 8;
+    }
+}
+
+message EmptyPayload{
+    // Empty
+}
+
+message IdentifyPayload{
+    string RunSnowflakeId = 1;
+}
+message IdentifyResponsePayload{
+    int32 heartbeatInterval = 1;
+}
+message MessagePayload{
+    string authorName = 1;
+    string message = 2 ;
+}
+message CallResponsePayload{
+    string calledName = 1;
+    bool accepted = 2;
+}
+message IncomingCallPayload{
+    string callerName = 1;
+}
+message IncomingCallResponsePayload{
+    bool accepted = 1;
+}
