@@ -69,7 +69,6 @@ func newSnowflake(IDType SnowflakeType) Snowflake {
 	if numberInBatch == MAX_BATCH+1 {
 		numberInBatch = 0
 	}
-	println("GENERATED: ", snowflake.StringIDDec())
 
 	return snowflake
 

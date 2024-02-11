@@ -11,31 +11,74 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Routes related to runs
+// Inserts a `run` into the database and returns its' id
+func createRun(ctx *fiber.Ctx, name string) (*Snowflake, error) {
+	var db = ctx.Locals("db").(*sql.DB)
+
+    logger.Println("Creating a run")
+
+	runId := newSnowflake(SF_RUN)
+
+    _, err := db.Exec("INSERT INTO runs (id, name) VALUES (?, ?);", runId.ID, name)
+	if err != nil {
+		return nil, err
+	}
+
+    return &runId, nil
+}
+
+// Updates the `run` in the database to 
+func stopRun(ctx *fiber.Ctx, runId Snowflake) (bool, error) {
+	var db = ctx.Locals("db").(*sql.DB)
+
+    logger.Printf("Stopping the run with id `%d`\n", runId.ID)
+
+    update, err := db.Exec("UPDATE runs SET ended = true WHERE id == ? AND ended <> true", runId.ID)
+	if err != nil {
+		return false, c_error(ctx, fmt.Sprintf("Error while trying to update the runs' state: `%s`", err.Error()), fiber.ErrBadRequest.Code)
+	}
+
+    affected, err := update.RowsAffected()
+    if err != nil {
+		return false, c_error(ctx, fmt.Sprintf("Error while retriving affected rows: `%s`", err.Error()), fiber.ErrBadRequest.Code)
+    }
+
+    return (affected > 1), nil
+}
 
 func startRun(ctx *fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/vnd.google.protobuf")
-	var db = ctx.Locals("db").(*sql.DB)
-	var request = &protobufMessages.StartRunRequest{}
 
+    // Parse request body
+	var request = &protobufMessages.StartRunRequest{}
 	if err := proto.Unmarshal(ctx.Body(), request); err != nil {
 		return c_error(ctx, err.Error(), fiber.ErrBadRequest.Code)
 	}
 
 	logger.Printf("Creating a run for a user with the name `%s`", request.Name)
 
-	snowflake := newSnowflake(SF_RUN)
+    runId, err := createRun(ctx, request.Name)
+    if err != nil {
+		return c_error(ctx, fmt.Sprintf("Unable to start the run. %s", err), fiber.ErrInternalServerError.Code)
+    }
 
+    question, err := getRandomQuestion(ctx, 1)
+    if err != nil {
+        return c_error(ctx, fmt.Sprintf("Unable to get the first question to the run with id `%d`: `%s`", runId.ID, err), fiber.ErrInternalServerError.Code)
+    }
+
+    err = assignQuestionToRun(ctx, *runId, question.Question.Id)
+    if err != nil {
+        return c_error(ctx, fmt.Sprintf("Unable to assign the first question to the run with id `%d`: `%s`", runId.ID, err), fiber.ErrInternalServerError.Code)
+    }
+
+    // Parse the response
 	var response = protobufMessages.StartRunResponse{}
-	response.SnowflakeId = strconv.FormatInt(snowflake.ID, 10)
+	response.RunId = strconv.FormatInt(runId.ID, 10)
+    response.Question = &question
 	out, err := proto.Marshal(&response)
 
-	_, err = db.Exec("INSERT INTO runs (snowflake_id, name, used_lifelines, ended) VALUES (?, ?, 0, false);", snowflake.ID, request.Name)
-	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Unable to start the run: `%s`", err), fiber.ErrInternalServerError.Code)
-	}
-
-	logger.Printf("Succesfully created a run for a user with the name `%s` of id `%d`", request.Name, snowflake.ID)
+	logger.Printf("Succesfully created a run for a user with the name `%s` of id `%d`", request.Name, runId.ID)
 	return ctx.Status(http.StatusOK).Send(out)
 }
 
@@ -45,7 +88,7 @@ func getRuns(ctx *fiber.Ctx) error {
 
 	logger.Println("Getting runs...")
 
-	run_rows, err := db.Query("SELECT snowflake_id, name, used_lifelines, ended FROM runs")
+	run_rows, err := db.Query("SELECT id, name, used_lifelines, ended FROM runs")
 	if err != nil {
 		c_error(ctx, fmt.Sprintf("Unable to get runs: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
@@ -54,7 +97,7 @@ func getRuns(ctx *fiber.Ctx) error {
 	var response = protobufMessages.GetRunsResponse{}
 	for run_rows.Next() {
 		run := protobufMessages.Run{}
-		run_rows.Scan(&run.SnowflakeId, &run.Name, &run.UsedLifelines, &run.Ended)
+		run_rows.Scan(&run.Id, &run.Name, &run.UsedLifelines, &run.Ended)
         if (run.Ended) {
             response.Runs = append(response.Runs, &run)
         }
@@ -72,7 +115,6 @@ func getRuns(ctx *fiber.Ctx) error {
 
 func endRun(ctx *fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/vnd.google.protobuf")
-	var db = ctx.Locals("db").(*sql.DB)
 
 	var request = &protobufMessages.EndRunRequest{}
 
@@ -80,30 +122,27 @@ func endRun(ctx *fiber.Ctx) error {
 		return c_error(ctx, err.Error(), fiber.ErrBadRequest.Code)
 	}
 
-	snowflake, err := strconv.ParseInt(request.SnowflakeId, 10, 64)
+    // Parse run id
+    runIdAsInt, err := strconv.Atoi(request.RunId)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while converting id from string to int: `%s`", err.Error()), fiber.ErrBadRequest.Code)
+		return c_error(ctx, fmt.Sprintf("Error while parsing run_id: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
-	logger.Printf("Ending a run with id `%d`\n", snowflake)
+    runId := snowflakeFromInt(int64(runIdAsInt))
 
-    update, err := db.Exec("UPDATE runs SET ended = true WHERE snowflake_id == ? AND ended <> true", snowflake)
+	logger.Printf("Ending a run with id `%d`\n", runId.ID)
+
+    affected, err := stopRun(ctx, runId)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while trying to update the runs' state: `%s`", err.Error()), fiber.ErrBadRequest.Code)
+		return c_error(ctx, fmt.Sprintf("Error while ending the run with id `%d`: `%s`", runId.ID, err), fiber.ErrInternalServerError.Code)
 	}
-
-    affected, err := update.RowsAffected()
-    if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while retriving affected rows: `%s`", err.Error()), fiber.ErrBadRequest.Code)
-    }
 
     var response protobufMessages.EndRunResponse
-    response.RunAffected = true
-    if affected == 0 {
-        response.RunAffected = false
-        logger.Printf("Run with id `%d` already ended\n", snowflake)
+    response.RunAffected = affected
+    if affected == false {
+        logger.Printf("Run with id `%d` already ended\n", runId.ID)
     } else {
-        logger.Printf("Run with id `%d` successfully ended\n", snowflake)
+        logger.Printf("Run with id `%d` successfully ended\n", runId.ID)
     }
 
 	out, err := proto.Marshal(&response)

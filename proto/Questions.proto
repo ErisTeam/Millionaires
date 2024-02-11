@@ -6,27 +6,27 @@ package millionaires.Questions;
 import "Answers.proto";
 
 message Question{
-    int32 id = 1;
-    string question = 2; 
-    int32 difficulty = 3;
-    int32 impressions = 4;
+    int32 Id = 1;
+    string Question = 2; 
+    int32 Difficulty = 3;
+    int32 Impressions = 4;
 }
 
-
-
+message GetQuestionRequest {
+    string RunId = 1;
+}
 
 message GetQuestionResponse {
-    Question question = 1;
-    repeated Answers.Answer answers = 2;
+    Question Question = 1;
+    repeated Answers.Answer Answers = 2;
 }
 
-
-
-message AnswerQuestionRequest{
-    int32 id = 1;
+message AnswerQuestionRequest {
+    string RunId = 1;
+    int32 AnswerId = 2;
 }
 
 message AnswerQuestionResponse{
-    bool isCorrect = 1;
-    optional GetQuestionResponse nextQuestion = 2;
+    bool IsCorrect = 1;
+    optional GetQuestionResponse NextQuestion = 2;
 }

@@ -23,3 +23,12 @@ SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.
 SELECT * FROM runs WHERE runs.id = 0;
 --SELECT run_questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.id WHERE runs.id == 0;
 SELECT run_questions.*, questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.id JOIN questions ON run_questions.question_id = questions.id WHERE runs.id == 0 ORDER BY questions.difficulty ASC;
+
+--- Select current question of the run
+SELECT * FROM run_questions;
+
+--- Get question_id from answers.id
+SELECT answers.question_id FROM answers WHERE answers.id = 5;
+
+--- Get run_question from answer_id and run_id
+SELECT run_questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.id WHERE run_questions.run_id = 145256729320357914 AND run_questions.question_id = (SELECT answers.question_id FROM answers WHERE answers.id = 4);

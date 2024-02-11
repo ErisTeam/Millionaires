@@ -1,0 +1,21 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+package millionaires.Lifelines;
+
+import "Answers.proto";
+
+enum Lifeline {
+    FiftyFifty = 0;
+    FriendCall = 1;
+    Audience = 2;
+}
+
+message UseLifelineRequest {
+    string RunSnowflakeId = 1;
+    Lifeline Lifeline = 2;
+}
+
+message UseLifelineResponse {
+    repeated Answers.Answer Answers = 1;
+}

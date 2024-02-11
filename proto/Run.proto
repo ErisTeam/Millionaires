@@ -1,47 +1,40 @@
 syntax = "proto3";
 option go_package = "protobufMessages/";
 
-
 package millionaires.Run;
 
+import "Questions.proto";
+
 message Run {
-    string SnowflakeId = 1; //TODO: change name
+    string Id = 1;
     string Name = 2; 
     int32 UsedLifelines = 3;
     bool Ended = 4;
 }
 
-//StartRun
+
+
 message StartRunRequest{
     string Name = 1;
 }
 
 message StartRunResponse{
-    string SnowflakeId = 1; //TODO: change name
+    string RunId = 1;
+    Questions.GetQuestionResponse Question = 2;
 }
 
+
+
 message EndRunRequest {
-    string SnowflakeId = 1; //TODO: change name
+    string RunId = 1;
 }
 
 message EndRunResponse {
     bool RunAffected = 1; 
 }
 
-//Get runs response
+
+
 message GetRunsResponse {
     repeated Run runs = 1;
-}
-
-//TODO: add lifelines
-enum LifeLines{
-    A = 0;
-};
-
-message UseLifeLineRequest{
-    int32 runId = 1;
-    LifeLines lifeline = 2;
-}
-message UseLifeLineResponse {
-    
 }

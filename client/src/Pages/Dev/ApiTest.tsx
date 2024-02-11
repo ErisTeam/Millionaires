@@ -1,12 +1,10 @@
-import HexagonButton from '@/Components/HexagonButton/HexagonButton';
 import {
 	ANSWER_QUESTION_ENDPOINT,
-	GET_QUESTIONS_ENDPOINT,
 	START_RUN_ENDPOINT,
 	GET_RUNS_ENDPOINT,
 	END_RUN_ENDPOINT,
 } from '../../constants';
-import { AnswerQuestionRequest, AnswerQuestionResponse, GetQuestionResponse } from '../../protobufMessages/Questions';
+import { AnswerQuestionRequest, AnswerQuestionResponse } from '../../protobufMessages/Questions';
 import {
 	StartRunRequest,
 	StartRunResponse,
@@ -19,32 +17,33 @@ import { Show, createSignal } from 'solid-js';
 
 export default () => {
 	const [runId, setRunId] = createSignal('');
+    const [answerId, setAnswerId] = createSignal('');
 	async function startRunTest() {
-		let a = StartRunRequest.create();
-		a.Name = 'test';
+		let request = StartRunRequest.create();
+		request.Name = 'Karol';
 		let res = await (
-			await fetch(START_RUN_ENDPOINT('Daniel'), {
+			await fetch(START_RUN_ENDPOINT, {
 				method: 'POST',
-				body: StartRunRequest.encode(a).finish(),
+				body: StartRunRequest.encode(request).finish(),
 			})
 		).arrayBuffer();
-		console.log(res);
-		let b = StartRunResponse.decode(new Uint8Array(res));
-		console.log(b);
-		setRunId(b.SnowflakeId);
+
+		let response = StartRunResponse.decode(new Uint8Array(res));
+		console.log(response);
+		setRunId(response.RunId);
 	}
 	async function endRunTest() {
-		let a = EndRunRequest.create();
-		a.SnowflakeId = '1';
+		let request = EndRunRequest.create();
+		request.RunId = runId();
 		let res = await (
 			await fetch(END_RUN_ENDPOINT, {
 				method: 'POST',
-				body: EndRunRequest.encode(a).finish(),
+				body: EndRunRequest.encode(request).finish(),
 			})
 		).arrayBuffer();
-		console.log(res);
-		let b = EndRunResponse.decode(new Uint8Array(res));
-		console.log(b);
+
+		let response = EndRunResponse.decode(new Uint8Array(res));
+		console.log(response);
 	}
 	async function getRunsTest() {
 		let res = await fetch(GET_RUNS_ENDPOINT);
@@ -53,32 +52,16 @@ export default () => {
 
 		console.log(resDecoded);
 	}
-	async function getQuestionsTest() {
-		let res = await fetch(GET_QUESTIONS_ENDPOINT('1'));
-		let resUint8 = new Uint8Array(await res.arrayBuffer());
-		let resDecoded = GetQuestionResponse.decode(resUint8);
 
-		console.log(resUint8, resDecoded);
-	}
-	async function answerQuestionFail() {
-		let reqBody = AnswerQuestionRequest.create();
-		reqBody.id = 1;
+	async function answerQuestion() {
+		let request = AnswerQuestionRequest.create();
+		request.RunId = runId();
+        request.AnswerId = Number(answerId());
 		let res = await fetch(ANSWER_QUESTION_ENDPOINT, {
 			method: 'POST',
-			body: AnswerQuestionRequest.encode(reqBody).finish(),
+			body: AnswerQuestionRequest.encode(request).finish(),
 		});
-		let resUint8 = new Uint8Array(await res.arrayBuffer());
-		let resDecoded = AnswerQuestionResponse.decode(resUint8);
 
-		console.log(resDecoded);
-	}
-	async function answerQuestionGood() {
-		let reqBody = AnswerQuestionRequest.create();
-		reqBody.id = 0;
-		let res = await fetch(ANSWER_QUESTION_ENDPOINT, {
-			method: 'POST',
-			body: AnswerQuestionRequest.encode(reqBody).finish(),
-		});
 		let resUint8 = new Uint8Array(await res.arrayBuffer());
 		let resDecoded = AnswerQuestionResponse.decode(resUint8);
 
@@ -158,30 +141,17 @@ export default () => {
 				>
 					Test Get Runs
 				</button>
-				<button
-					onClick={(e) => {
-						e.preventDefault();
-						getQuestionsTest();
-					}}
-				>
-					Test Get Questions
+				<button onClick={(e) => { e.preventDefault(); answerQuestion(); }} >
+					Test Answer Question
 				</button>
-				<button
-					onClick={(e) => {
-						e.preventDefault();
-						answerQuestionFail();
-					}}
-				>
-					Test Answer Question Fail
-				</button>
-				<button
-					onClick={(e) => {
-						e.preventDefault();
-						answerQuestionGood();
-					}}
-				>
-					Test Answer Question Good
-				</button>
+                <label>
+                    <p style={{ color: "white" }}>Run ID</p>
+                    <input type="text" value={runId()} onChange={(e) => { setRunId(e.target.value); }}/>
+                </label>
+                <label>
+                    <p style={{ color: "white" }}>Answer ID</p>
+                    <input type="text" value={answerId()} onChange={(e) => { setAnswerId(e.target.value); }}/>
+                </label>
 			</article>
 
 			<article>

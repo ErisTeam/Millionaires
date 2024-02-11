@@ -65,7 +65,6 @@ func main() {
 
 	// Gets a random question of a specified difficulty
 	// TODO: Phrase error messages better
-	app.Get("/question", getQuestion)
 	app.Post("/answerQuestion", answerQuestion)
 
 	log.Fatal(app.Listen(":9090"))
