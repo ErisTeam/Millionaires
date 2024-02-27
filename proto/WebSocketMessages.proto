@@ -9,14 +9,16 @@ enum MessageType{
     EndCall = 1;
     Message = 2;
     
-    CallResponse = 3;
+    CallServerResponse = 3;
     IncomingCall = 4;
-    IncomingCallResponse = 5;
+    CallResponse = 5;
 
     Heartbeat = 6;
     HeartbeatResponse = 7;
 
     Identify = 8;
+
+    Error = 9;
 }
 
 message WebsocketMessage{
@@ -25,16 +27,22 @@ message WebsocketMessage{
         EmptyPayload empty = 2;
         IdentifyPayload identify = 3;
         MessagePayload message = 4;
-        CallResponsePayload callResponse = 5;
+        CallServerResponsePayload callServerResponse = 5;
         IncomingCallPayload incomingCall = 6;
-        IncomingCallResponsePayload incomingCallResponse = 7;
+        CallResponsePayload callResponse = 7;
        
         IdentifyResponsePayload identifyResponse = 8;
+
+        ErrorPayload error = 9;
     }
 }
 
 message EmptyPayload{
     // Empty
+}
+
+message ErrorPayload{
+    string message = 1;
 }
 
 message IdentifyPayload{
@@ -47,13 +55,12 @@ message MessagePayload{
     string authorName = 1;
     string message = 2 ;
 }
-message CallResponsePayload{
-    string calledName = 1;
-    bool accepted = 2;
+message CallServerResponsePayload{
+    string calleeName = 1;
 }
 message IncomingCallPayload{
     string callerName = 1;
 }
-message IncomingCallResponsePayload{
+message CallResponsePayload{
     bool accepted = 1;
 }
