@@ -26,7 +26,7 @@ export default (props: { class?: string }) => {
 	console.log(questionsStatus());
 	return (
 		<div class={style.ladder}>
-			<div class={style.lifeLinesContainer}>
+			<span class={style.lifeLinesContainer}>
 				<IconUsersGroup class={style.lifeLine} />
 				<IconShieldHalfFilled
 					class={style.lifeLine}
@@ -35,7 +35,7 @@ export default (props: { class?: string }) => {
 					}}
 				/>
 				<IconPhoneCall class={style.lifeLine} />
-			</div>
+			</span>
 			<ol>
 				<For each={questionsStatus()}>
 					{(v, index) => {

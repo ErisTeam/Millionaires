@@ -1,5 +1,5 @@
 import style from './Podium.module.css';
-import { IconFiretruck, IconFirstAidKit, IconForklift } from '@tabler/icons-solidjs';
+import { IconAward } from '@tabler/icons-solidjs';
 export default function Podium() {
 	return (
 		<>
@@ -7,19 +7,22 @@ export default function Podium() {
 				<div class={style.second}>
 					<span>username</span>
 					<p class={style.place}>
-						<IconFiretruck />
+						<IconAward></IconAward>
+						<span>II</span>
 					</p>
 				</div>
 				<div class={style.first}>
 					<span>username</span>
 					<p class={style.place}>
-						<IconFirstAidKit />
+						<IconAward></IconAward>
+						<span>I</span>
 					</p>
 				</div>
 				<div class={style.third}>
-					<span>username</span>
+					<span>usernamedsdaasd</span>
 					<p class={style.place}>
-						<IconForklift />
+						<IconAward></IconAward>
+						<span>III</span>
 					</p>
 				</div>
 			</aside>

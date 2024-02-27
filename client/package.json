@@ -10,6 +10,7 @@
 		"build-protobuf": "protoc --plugin=\".\\node_modules\\.bin\\protoc-gen-ts_proto.cmd\" --ts_proto_out=./src/protobufMessages ../proto/*.proto  --proto_path=../proto/"
 	},
 	"dependencies": {
+		"@formkit/auto-animate": "^0.8.1",
 		"@solid-primitives/i18n": "^2.0.1",
 		"@solidjs/meta": "^0.29.3",
 		"@solidjs/router": "^0.10.10",
