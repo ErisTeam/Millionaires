@@ -94,3 +94,44 @@
 		}
 	}
 }
+
+@media (max-width: 768px) {
+	.container {
+		grid-template-columns: 1fr;
+		grid-template-rows: 1fr 1fr;
+	}
+	.progressTracker {
+		grid-row: 1/2;
+		border-left: none !important;
+	}
+	.game {
+		grid-template-rows: 1fr;
+
+		.questionContainer {
+			grid-row: 2/2;
+			.answers {
+				li {
+					flex-direction: column;
+					gap: 0.5em;
+					&::before {
+						content: none !important;
+					}
+					button {
+						position: relative;
+						&::before {
+							content: '';
+							position: absolute;
+							width: 120%;
+							left: -10%;
+							height: 4px;
+							background: var(--secondary-500);
+							top: 50%;
+							z-index: -1;
+							transform: translateY(-50%);
+						}
+					}
+				}
+			}
+		}
+	}
+}
