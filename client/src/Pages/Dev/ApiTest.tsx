@@ -1,9 +1,4 @@
-import {
-	ANSWER_QUESTION_ENDPOINT,
-	START_RUN_ENDPOINT,
-	GET_RUNS_ENDPOINT,
-	END_RUN_ENDPOINT,
-} from '../../constants';
+import { ANSWER_QUESTION_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT, END_RUN_ENDPOINT } from '../../constants';
 import { AnswerQuestionRequest, AnswerQuestionResponse } from '../../protobufMessages/Questions';
 import {
 	StartRunRequest,
@@ -12,19 +7,24 @@ import {
 	EndRunRequest,
 	EndRunResponse,
 } from '../../protobufMessages/Run';
-import { MessageType, WebsocketMessage } from '@/protobufMessages/WebSocketMessages';
-import { Show, createSignal } from 'solid-js';
+import { MessagePayload, MessageType, WebsocketMessage } from '@/protobufMessages/WebSocketMessages';
+import { For, Show, createSignal } from 'solid-js';
 
 export default () => {
 	const [runId, setRunId] = createSignal('');
-    const [answerId, setAnswerId] = createSignal('');
+	const [answerId, setAnswerId] = createSignal('');
+	const [name, setName] = createSignal('');
+
+	const [messages, setMessages] = createSignal<MessagePayload[]>([]);
+	const [inCall, setInCall] = createSignal(false);
+
 	async function startRunTest() {
-		let request = StartRunRequest.create();
-		request.Name = 'Karol';
+		let a = StartRunRequest.create();
+		a.Name = name();
 		let res = await (
 			await fetch(START_RUN_ENDPOINT, {
 				method: 'POST',
-				body: StartRunRequest.encode(request).finish(),
+				body: StartRunRequest.encode(a).finish(),
 			})
 		).arrayBuffer();
 
@@ -56,7 +56,7 @@ export default () => {
 	async function answerQuestion() {
 		let request = AnswerQuestionRequest.create();
 		request.RunId = runId();
-        request.AnswerId = Number(answerId());
+		request.AnswerId = Number(answerId());
 		let res = await fetch(ANSWER_QUESTION_ENDPOINT, {
 			method: 'POST',
 			body: AnswerQuestionRequest.encode(request).finish(),
@@ -69,8 +69,14 @@ export default () => {
 	}
 
 	const [incomingCall, setIncomingCall] = createSignal(false);
+	const [callerName, setCallerName] = createSignal('');
+	const [ws, setWs] = createSignal<WebSocket | null>(null);
+
 	async function startWebsocketConnection() {
 		const ws = new WebSocket('ws://localhost:9090/ws');
+		setWs(ws);
+
+		let heartbeatInterval = -1;
 
 		ws.onmessage = async (event) => {
 			console.log(event);
@@ -80,7 +86,7 @@ export default () => {
 			console.log('message', decodedMessage);
 			switch (decodedMessage.type) {
 				case MessageType.Identify:
-					setInterval(() => {
+					heartbeatInterval = setInterval(() => {
 						ws.send(
 							WebsocketMessage.encode(
 								WebsocketMessage.fromPartial({
@@ -89,6 +95,33 @@ export default () => {
 							).finish(),
 						);
 					}, decodedMessage.identifyResponse?.heartbeatInterval);
+					break;
+				case MessageType.IncomingCall:
+					setCallerName(decodedMessage.incomingCall?.callerName || '');
+					setIncomingCall(true);
+					break;
+				case MessageType.EndCall:
+					setIncomingCall(false);
+					break;
+				case MessageType.Message:
+					let message = decodedMessage.message;
+					console.log(message);
+					if (!message) {
+						break;
+					}
+					setMessages((prev) => {
+						return [...prev, message as MessagePayload];
+					});
+					console.log(messages());
+					break;
+				case MessageType.CallResponse:
+					let callResponse = decodedMessage.callResponse;
+
+					if (callResponse?.accepted) {
+						setInCall(true);
+					} else {
+						setInCall(false);
+					}
 					break;
 			}
 		};
@@ -110,6 +143,9 @@ export default () => {
 
 		ws.onclose = (event) => {
 			console.log('closed', event);
+			if (heartbeatInterval !== -1) {
+				clearInterval(heartbeatInterval);
+			}
 		};
 	}
 
@@ -117,6 +153,7 @@ export default () => {
 		<div style={{ color: 'black' }}>
 			<article>
 				<h1 style={{ color: 'white' }}>Api Test</h1>
+				<input type="text" placeholder="Name" oninput={(e) => setName(e.currentTarget.value)} />
 				<button
 					onClick={(e) => {
 						e.preventDefault();
@@ -141,32 +178,109 @@ export default () => {
 				>
 					Test Get Runs
 				</button>
-				<button onClick={(e) => { e.preventDefault(); answerQuestion(); }} >
+				<button
+					onClick={(e) => {
+						e.preventDefault();
+						answerQuestion();
+					}}
+				>
 					Test Answer Question
 				</button>
-                <label>
-                    <p style={{ color: "white" }}>Run ID</p>
-                    <input type="text" value={runId()} onChange={(e) => { setRunId(e.target.value); }}/>
-                </label>
-                <label>
-                    <p style={{ color: "white" }}>Answer ID</p>
-                    <input type="text" value={answerId()} onChange={(e) => { setAnswerId(e.target.value); }}/>
-                </label>
+				<label>
+					<p style={{ color: 'white' }}>Run ID</p>
+					<input
+						type="text"
+						value={runId()}
+						onChange={(e) => {
+							setRunId(e.target.value);
+						}}
+					/>
+				</label>
+				<label>
+					<p style={{ color: 'white' }}>Answer ID</p>
+					<input
+						type="text"
+						value={answerId()}
+						onChange={(e) => {
+							setAnswerId(e.target.value);
+						}}
+					/>
+				</label>
 			</article>
 
 			<article>
 				<h1 style={{ color: 'white' }}>WebSocket Test</h1>
 				<button onclick={startWebsocketConnection}>Connect</button>
 				<button>Disconnect</button>
-				<button>Call</button>
+				<Show when={!inCall()}>
+					<button
+						onclick={() => {
+							const m = WebsocketMessage.create();
+							m.type = MessageType.StartCall;
+
+							ws()?.send(WebsocketMessage.encode(m).finish());
+						}}
+					>
+						Call
+					</button>
+				</Show>
 				<Show when={incomingCall()}>
-					<button>Answer</button>
-					<button>Reject</button>
+					<h1>{callerName()}</h1>
+					<button
+						onclick={() => {
+							const m = WebsocketMessage.create();
+							m.type = MessageType.CallResponse;
+							m.callResponse = {
+								accepted: true,
+							};
+							ws()?.send(WebsocketMessage.encode(m).finish());
+							setIncomingCall(false);
+						}}
+					>
+						Answer
+					</button>
+					<button
+						onclick={() => {
+							const m = WebsocketMessage.create();
+							m.type = MessageType.CallResponse;
+							m.callResponse = {
+								accepted: false,
+							};
+							ws()?.send(WebsocketMessage.encode(m).finish());
+							setIncomingCall(false);
+						}}
+					>
+						Reject
+					</button>
 				</Show>
 
 				<section>
-					<textarea cols="30" rows="2" placeholder="Message"></textarea>
-					<button>Send</button>
+					<ol style={{ color: 'white' }}>
+						<For each={messages()}>
+							{(e) => {
+								console.log(e);
+								return (
+									<li>
+										{e.authorName}: {e.message}
+									</li>
+								);
+							}}
+						</For>
+					</ol>
+					<textarea cols="30" rows="2" placeholder="Message" id="Message"></textarea>
+					<button
+						onclick={() => {
+							const m = WebsocketMessage.create();
+							m.type = MessageType.Message;
+							m.message = {
+								authorName: name(),
+								message: (document.getElementById('Message') as HTMLTextAreaElement).value,
+							};
+							ws()?.send(WebsocketMessage.encode(m).finish());
+						}}
+					>
+						Send
+					</button>
 				</section>
 			</article>
 		</div>

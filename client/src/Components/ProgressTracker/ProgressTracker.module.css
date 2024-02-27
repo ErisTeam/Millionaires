@@ -2,6 +2,10 @@
 	z-index: 10;
 	width: 100%;
 	height: 100%;
+	/* display: flex;
+	flex-direction: column;
+	justify-content: center; */
+	align-items: center;
 	font-size: 1.75em;
 
 	border-left: 2px solid var(--secondary-500);
@@ -9,11 +13,89 @@
 	padding: 0.5em;
 
 	display: grid;
-	grid-template-rows: 100px 1fr;
+	grid-template-rows: 5em 1fr;
+
+	/* grid-area: ladder; */
+
 	position: relative;
 	background: var(--background-950);
 	/*TODO: change to class*/
-	& > .lifeLinesContainer {
+	& > ol {
+		list-style: none;
+		min-width: fit-content;
+		width: 100%;
+		height: 100%;
+
+		display: flex;
+
+		flex-direction: column-reverse;
+
+		gap: 0.5em;
+		justify-content: flex-start;
+	}
+	.question {
+		list-style: none;
+		align-items: center;
+		justify-items: center;
+
+		width: inherit;
+		/* height: 1.7em; */
+		height: 100%;
+
+		font-size: clamp(0.6em, 1.9vw, 1em);
+
+		text-align: right;
+		padding-left: 1em;
+		padding-right: 3em;
+		border-radius: 0.5em;
+		position: relative;
+
+		display: grid;
+
+		grid-template-columns: 1.5em 1em 100%;
+
+		& > * {
+			font-size: inherit;
+		}
+
+		&.answered {
+			.diamondFilled {
+				visibility: visible;
+			}
+		}
+
+		&.currentQuestion {
+			.hexagon {
+				fill: var(--secondary-500);
+				stroke: var(--secondary-200);
+
+				scale: 1.05;
+			}
+		}
+
+		.diamondFilled {
+			visibility: hidden;
+		}
+
+		.diamond {
+			width: 1.2em;
+			height: 1.2em;
+		}
+
+		.hexagon {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			z-index: -1;
+			stroke: var(--secondary-400);
+			stroke-width: 3px;
+			fill: var(--secondary-900);
+		}
+	}
+
+	.lifeLinesContainer {
 		position: relative;
 		display: flex;
 		flex-direction: row;
@@ -23,7 +105,6 @@
 		justify-content: center;
 		align-items: center;
 		padding-bottom: 1em;
-		grid-area: 1/1/2/2;
 
 		> .lifeLine {
 			aspect-ratio: 1/1;
@@ -123,11 +204,6 @@
 				fill: var(--secondary-900);
 			}
 		}
-	}
-}
-@media (max-width: 1100px) {
-	.ladder {
-		display: none;
 	}
 }
 @media (max-width: 768px) {

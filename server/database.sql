@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS answers (
     answer TEXT,
     is_correct BOOLEAN,
     chosen INTEGER,
-    FOREIGN KEY (question_id) REFERENCES questions(id)
+    FOREIGN KEY (question_id) REFERENCES questions (id)
 );
 
 INSERT INTO answers (id, question_id, answer, is_correct, chosen) VALUES
@@ -42,13 +42,13 @@ INSERT INTO answers (id, question_id, answer, is_correct, chosen) VALUES
 
 --- Create and populate the `runs` table
 CREATE TABLE IF NOT EXISTS runs (
-    id INTEGER UNIQUE NOT NULL primary key,
+    snowflake_id INTEGER UNIQUE NOT NULL primary key,
     name VARCHAR(255) NOT NULL,
     used_lifelines INTEGER DEFAULT 0,
     ended BOOLEAN DEFAULT FALSE
 );
 
-INSERT INTO runs (id, name, used_lifelines, ended) VALUES
+INSERT INTO runs (snowflake_id, name, used_lifelines, ended) VALUES
 (0, "BoyKisser :3", 0, true),
 (1, "Joe", 7, false);
 

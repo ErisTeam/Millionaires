@@ -7,6 +7,7 @@ import (
 	"millionairesServer/protobufMessages"
 	"os"
 
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	_ "github.com/mattn/go-sqlite3"
@@ -34,22 +35,38 @@ func NewQuestionResponse(question *protobufMessages.Question, answers []*protobu
 	return protobufMessages.GetQuestionResponse{Question: question, Answers: parsed_answers}
 }
 
+func createDbConnection() *sql.DB {
+	var db, err = sql.Open("sqlite3", "./millionaires.db")
+	if err != nil {
+		panic(err)
+	}
+	db.SetMaxOpenConns(9)
+	db.SetMaxIdleConns(3)
+	return db
+}
+
 func main() {
+
 	fmt.Println("Starting...")
 
-	// Open connection with the database
+	var clientManager = WebSocketClientManager{dbConnection: createDbConnection(), clients: make(ClientMapType)}
 
 	app := fiber.New()
 
 	app.Use(cors.New(cors.ConfigDefault))
 
 	app.Use(func(c *fiber.Ctx) error {
-		var db, err = sql.Open("sqlite3", "./millionaires.db")
-		if err != nil {
-			panic(err)
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("clientManager", &clientManager)
 		}
-		db.SetMaxOpenConns(9)
-		db.SetMaxIdleConns(3)
+		return c.Next()
+	})
+
+	app.Use(func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			return c.Next()
+		}
+		var db = createDbConnection()
 		defer db.Close()
 		c.Locals("db", db)
 		return c.Next()
@@ -66,6 +83,8 @@ func main() {
 	// Gets a random question of a specified difficulty
 	// TODO: Phrase error messages better
 	app.Post("/answerQuestion", answerQuestion)
+
+	app.Get("/ws/", websocket.New(WebsocketRun))
 
 	log.Fatal(app.Listen(":9090"))
 }

@@ -56,7 +56,7 @@ export default (props: { class?: string }) => {
 								) : (
 									<IconDiamondsFilled class={style.diamond + ' ' + style.diamondFilled} />
 								)}
-								{v.value}
+								<span>{v.value}</span>
 							</li>
 						);
 					}}

@@ -11,10 +11,10 @@ export default function App() {
 	return (
 		<div class={style.container}>
 			<div class={style.game}>
-				<div class={style.ai}>
+				{/* <div class={style.ai}>
 					<div class={style.questionImg}></div>
 					<div class={style.host}></div>
-				</div>
+				</div> */}
 				<div class={style.questionContainer}>
 					<Question
 						question={{

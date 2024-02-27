@@ -41,25 +41,25 @@ func (s SnowflakeType) String() string {
 }
 
 type Snowflake struct {
-	ID            int64
+	RawSnowflake  int64
 	Date          time.Time
 	NumberInBatch int64
 	IDType        SnowflakeType
 }
 
 func (s Snowflake) StringIDBin() string {
-	return strconv.FormatInt(s.ID, 2)
+	return strconv.FormatInt(s.RawSnowflake, 2)
 }
 func (s Snowflake) StringIDDec() string {
-	return strconv.FormatInt(s.ID, 10)
+	return strconv.FormatInt(s.RawSnowflake, 10)
 }
 
 func newSnowflake(IDType SnowflakeType) Snowflake {
 	var currentDate = time.Now().UnixMilli()
 
-	var ID = ((((currentDate - epoch) << BATCH_BITS) | numberInBatch) << TYPE_BITS) | int64(IDType)
+	var RawSnowflake = ((((currentDate - epoch) << BATCH_BITS) | numberInBatch) << TYPE_BITS) | int64(IDType)
 
-	var snowflake = Snowflake{ID: ID,
+	var snowflake = Snowflake{RawSnowflake: RawSnowflake,
 		Date: time.UnixMilli(currentDate),
 
 		NumberInBatch: numberInBatch,
@@ -75,8 +75,13 @@ func newSnowflake(IDType SnowflakeType) Snowflake {
 }
 
 func snowflakeFromInt(input int64) Snowflake {
-	return Snowflake{ID: input,
+	return Snowflake{RawSnowflake: input,
 		Date:          time.UnixMilli((input >> (TYPE_BITS + BATCH_BITS)) + epoch),
 		NumberInBatch: input >> TYPE_BITS & MAX_BATCH,
 		IDType:        SnowflakeType(input & MAX_TYPE)}
+}
+
+func snowflakeFromString(input string) (Snowflake, error) {
+	i, err := strconv.ParseInt(input, 10, 64)
+	return snowflakeFromInt(i), err
 }
