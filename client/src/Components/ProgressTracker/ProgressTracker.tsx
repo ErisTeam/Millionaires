@@ -25,7 +25,7 @@ export default (props: { class?: string }) => {
 	);
 	console.log(questionsStatus());
 	return (
-		<div class={style.ladder + ' ' + props.class}>
+		<div class={style.ladder}>
 			<div class={style.lifeLinesContainer}>
 				<IconUsersGroup class={style.lifeLine} />
 				<IconShieldHalfFilled

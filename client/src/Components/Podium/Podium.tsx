@@ -3,29 +3,26 @@ import { IconFiretruck, IconFirstAidKit, IconForklift } from '@tabler/icons-soli
 export default function Podium() {
 	return (
 		<>
-			<div class={style.podium}>
+			<aside class={style.podium}>
 				<div class={style.second}>
-					<h2>2nd</h2>
-					<div class={style.user}>
-						<p>Second</p>
+					<span>username</span>
+					<p class={style.place}>
 						<IconFiretruck />
-					</div>
+					</p>
 				</div>
 				<div class={style.first}>
-					<h2>1st</h2>
-					<div class={style.user}>
-						<p>First</p>
+					<span>username</span>
+					<p class={style.place}>
 						<IconFirstAidKit />
-					</div>
+					</p>
 				</div>
 				<div class={style.third}>
-					<h2>3rd</h2>
-					<div class={style.user}>
-						<p>Third</p>
+					<span>username</span>
+					<p class={style.place}>
 						<IconForklift />
-					</div>
+					</p>
 				</div>
-			</div>
+			</aside>
 		</>
 	);
 }

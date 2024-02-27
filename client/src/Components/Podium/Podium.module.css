@@ -1,19 +1,50 @@
 .podium {
 	grid-area: podium;
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	& > div {
+	align-items: flex-end;
+	& div {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		& > img {
-			width: 100px;
-			height: 100px;
+		flex-direction: column;
+		width: 100%;
+		& > span {
+			font-size: 1.25rem;
+			font-weight: 700;
+			color: var(--primary-100);
+			display: flex;
+			align-items: center;
+			flex-direction: column;
 		}
-		& > p {
-			font-size: 1.5em;
-			margin-left: 10px;
+		& > .place {
+			width: 100%;
+			height: 100%;
+
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			& > svg {
+				width: 4em;
+				height: 4em;
+			}
+		}
+	}
+	& .first {
+		height: 200px;
+		& > .place {
+			background-color: var(--secondary-400);
+		}
+	}
+	& .second {
+		height: 150px;
+		& > .place {
+			background-color: var(--primary-300);
+		}
+	}
+	& .third {
+		height: 100px;
+		& > .place {
+			background-color: var(--primary-200);
 		}
 	}
 }
