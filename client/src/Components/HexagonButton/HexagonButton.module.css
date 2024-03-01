@@ -34,7 +34,7 @@
 		fill: var(--primary-800);
 		transition: inherit;
 	}
-	.hexagon:hover {
+	&:hover > .hexagon {
 		fill: var(--primary-700);
 	}
 	.answering {

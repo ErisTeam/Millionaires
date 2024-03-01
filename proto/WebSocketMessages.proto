@@ -46,7 +46,7 @@ message ErrorPayload{
 }
 
 message IdentifyPayload{
-    string RunSnowflakeId = 1;
+    string runSnowflakeId = 1;
 }
 message IdentifyResponsePayload{
     int32 heartbeatInterval = 1;

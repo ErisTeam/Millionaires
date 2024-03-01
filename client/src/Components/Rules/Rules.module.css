@@ -1,0 +1,15 @@
+.rules {
+	margin: 0;
+	border: 4px white solid;
+	border-radius: 1em;
+	background-color: var(--primary-300);
+	padding: 1em 2em;
+	width: 90%;
+	& > h1 {
+		font-size: 2em;
+		text-align: center;
+	}
+	& > li {
+		font-size: 1.25em;
+	}
+}

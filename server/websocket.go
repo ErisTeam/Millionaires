@@ -424,6 +424,26 @@ func WebsocketRun(c *websocket.Conn) {
 
 			targetConnection.WriteMessage(websocket.BinaryMessage, binary)
 			c.WriteMessage(websocket.BinaryMessage, binary)
+			break
+		case protobufMessages.MessageType_EndCall:
+			var _, currentClient = clientManager.GetClientByConnection(c)
+			if currentClient == nil {
+				c.WritePreparedMessage(noIdentifiedResponse)
+				return
+			}
+
+			var targetClient = clientManager.clients[*currentClient.target]
+
+			currentClient.resetCall()
+			targetClient.resetCall()
+
+			msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_EndCall}
+			response, err := proto.Marshal(msg)
+			if err != nil {
+				println("proto: ", err.Error())
+				return
+			}
+			targetClient.connection.WriteMessage(websocket.BinaryMessage, response)
 		}
 
 	}

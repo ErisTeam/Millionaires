@@ -1,5 +1,6 @@
 .leaderBoard {
 	display: flex;
+	position: relative;
 	grid-area: leaderboard;
 	flex-direction: column;
 	align-items: center;
@@ -12,17 +13,16 @@
 		font-size: 3rem;
 	}
 	& > ol {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5em;
 		padding: 1em;
 		width: 100%;
-
+		height: 100%;
+		overflow-x: hidden;
+		overflow-y: auto;
+		scrollbar-gutter: stable;
 		list-style: none;
-		& > li {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			padding: 0 0.1em;
-		}
-
 		&::-webkit-scrollbar {
 			border-radius: 0.5rem;
 			background-color: var(--secondary-300);
@@ -33,13 +33,76 @@
 			background-color: var(--primary-300);
 		}
 		& > li {
-			margin-top: 1rem;
-			border: 3px solid var(--secondary-500);
+			display: flex;
+			position: relative;
+			justify-content: space-between;
+			align-items: center;
+			outline: 3px solid var(--secondary-500);
 			border-radius: 0.25em;
-			padding: 0.25rem;
+			padding: 0.25rem 0.5rem;
+			height: 1.25em;
+			font-weight: bold;
 			font-size: 2rem;
 			& > span {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				vertical-align: middle;
 				font-size: 1.5rem;
+			}
+		}
+		& > li:nth-child(1),
+		& > li:nth-child(2),
+		& > li:nth-child(3) {
+			display: flex;
+			position: relative;
+			align-items: center;
+			border: none;
+			&::before {
+				position: absolute;
+				top: 0;
+				left: 0;
+				border-radius: 0.25em;
+				width: 100%;
+				height: 100%;
+
+				content: '';
+			}
+
+			& > span > svg {
+				width: 2em;
+				height: 2em;
+			}
+		}
+		& > li:nth-child(1) {
+			& > span > svg {
+				filter: drop-shadow(0 0 0.25rem gold);
+				color: gold;
+			}
+			&::before {
+				filter: drop-shadow(0 0 0.25rem gold);
+				outline: 3px solid gold;
+			}
+		}
+		& > li:nth-child(2) {
+			&::before {
+				filter: drop-shadow(0 0 0.25rem silver);
+				outline: 3px solid silver;
+			}
+			& > span > svg {
+				filter: drop-shadow(0 0 0.25rem silver);
+				color: silver;
+			}
+		}
+		& > li:nth-child(3) {
+			&::before {
+				filter: drop-shadow(0 0 0.25rem #e6882a);
+				outline: 3px solid #e6882a;
+			}
+
+			& > span > svg {
+				filter: drop-shadow(0 0 0.25rem #e6882a);
+				color: #e6882a;
 			}
 		}
 	}

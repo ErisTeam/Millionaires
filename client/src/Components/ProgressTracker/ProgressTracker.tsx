@@ -28,6 +28,7 @@ export default (props: { class?: string }) => {
 		<div class={style.ladder}>
 			<span class={style.lifeLinesContainer}>
 				<IconUsersGroup class={style.lifeLine} />
+				<button></button>
 				<IconShieldHalfFilled
 					class={style.lifeLine}
 					classList={{

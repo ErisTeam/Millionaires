@@ -20,7 +20,7 @@ export default () => {
 
 	async function startRunTest() {
 		let a = StartRunRequest.create();
-		a.Name = name();
+		a.name = name();
 		let res = await (
 			await fetch(START_RUN_ENDPOINT, {
 				method: 'POST',
@@ -30,11 +30,11 @@ export default () => {
 
 		let response = StartRunResponse.decode(new Uint8Array(res));
 		console.log(response);
-		setRunId(response.RunId);
+		setRunId(response.runId);
 	}
 	async function endRunTest() {
 		let request = EndRunRequest.create();
-		request.RunId = runId();
+		request.runId = runId();
 		let res = await (
 			await fetch(END_RUN_ENDPOINT, {
 				method: 'POST',
@@ -55,8 +55,8 @@ export default () => {
 
 	async function answerQuestion() {
 		let request = AnswerQuestionRequest.create();
-		request.RunId = runId();
-		request.AnswerId = Number(answerId());
+		request.runId = runId();
+		request.answerId = Number(answerId());
 		let res = await fetch(ANSWER_QUESTION_ENDPOINT, {
 			method: 'POST',
 			body: AnswerQuestionRequest.encode(request).finish(),
@@ -132,7 +132,7 @@ export default () => {
 			const m = WebsocketMessage.create();
 			m.type = MessageType.Identify;
 			m.identify = {
-				RunSnowflakeId: runId(),
+				runSnowflakeId: runId(),
 			};
 			ws.send(WebsocketMessage.encode(m).finish());
 		};

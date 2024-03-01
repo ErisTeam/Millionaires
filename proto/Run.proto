@@ -6,31 +6,31 @@ package millionaires.Run;
 import "Questions.proto";
 
 message Run {
-    string Id = 1;
-    string Name = 2; 
-    int32 UsedLifelines = 3;
-    bool Ended = 4;
+    string id = 1;
+    string name = 2; 
+    int32 usedLifelines = 3;
+    bool ended = 4;
 }
 
 
 
 message StartRunRequest{
-    string Name = 1;
+    string name = 1;
 }
 
 message StartRunResponse{
-    string RunId = 1;
-    Questions.GetQuestionResponse Question = 2;
+    string runId = 1;
+    Questions.GetQuestionResponse question = 2;
 }
 
 
 
 message EndRunRequest {
-    string RunId = 1;
+    string runId = 1;
 }
 
 message EndRunResponse {
-    bool RunAffected = 1; 
+    bool runAffected = 1; 
 }
 
 

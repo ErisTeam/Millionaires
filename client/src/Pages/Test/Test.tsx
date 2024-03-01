@@ -1,11 +1,9 @@
 import { createAutoAnimate } from '@formkit/auto-animate/solid';
-import Leaderboard from 'Components/Leaderboard/Leaderboard';
+import Rules from 'Components/Rules/Rules';
 const Test = function () {
-	const [parent, setEnabled] = createAutoAnimate(/* optional config */);
-
 	return (
 		<div>
-			<Leaderboard />
+			<Rules />
 		</div>
 	);
 };

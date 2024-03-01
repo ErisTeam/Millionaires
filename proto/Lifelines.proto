@@ -6,16 +6,16 @@ package millionaires.Lifelines;
 import "Answers.proto";
 
 enum Lifeline {
-    FiftyFifty = 0;
-    FriendCall = 1;
-    Audience = 2;
+    fiftyFifty = 0;
+    friendCall = 1;
+    audience = 2;
 }
 
 message UseLifelineRequest {
-    string RunSnowflakeId = 1;
-    Lifeline Lifeline = 2;
+    string runSnowflakeId = 1;
+    Lifeline lifeline = 2;
 }
 
 message UseLifelineResponse {
-    repeated Answers.Answer Answers = 1;
+    repeated Answers.Answer answers = 1;
 }
