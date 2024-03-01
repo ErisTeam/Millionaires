@@ -1,19 +1,17 @@
 .leaderBoard {
-	grid-area: leaderboard;
-	height: 100%;
-	max-height: 100vh;
-	width: 100%;
 	display: flex;
+	grid-area: leaderboard;
 	flex-direction: column;
 	align-items: center;
 	padding: 2rem;
+	width: 100%;
+	height: 100%;
+	max-height: 100vh;
 
 	& > h1 {
 		font-size: 3rem;
 	}
 	& > ol {
-		overflow-y: auto;
-		overflow-x: hidden;
 		padding: 1em;
 		width: 100%;
 
@@ -26,20 +24,20 @@
 		}
 
 		&::-webkit-scrollbar {
-			width: 0.5rem;
-			background-color: var(--secondary-300);
 			border-radius: 0.5rem;
+			background-color: var(--secondary-300);
+			width: 0.5rem;
 		}
 		&::-webkit-scrollbar-thumb {
-			background-color: var(--primary-300);
 			border-radius: 0.5rem;
+			background-color: var(--primary-300);
 		}
 		& > li {
+			margin-top: 1rem;
 			border: 3px solid var(--secondary-500);
+			border-radius: 0.25em;
 			padding: 0.25rem;
 			font-size: 2rem;
-			margin-top: 1rem;
-			border-radius: 0.25em;
 			& > span {
 				font-size: 1.5rem;
 			}
