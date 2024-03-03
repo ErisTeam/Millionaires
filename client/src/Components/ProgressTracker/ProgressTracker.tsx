@@ -10,20 +10,12 @@ import {
 import style from './ProgressTracker.module.css';
 import { For, createSignal } from 'solid-js';
 import Hexagon from '../Hexagon/Hexagon';
+import { useAppState } from '@/AppState';
+//TODO: make this update on question change
+export default function ProgressTracker() {
+	const AppState = useAppState();
 
-type QuestionInfo = {
-	answered: boolean;
-	value: number;
-};
-
-export default (props: { class?: string }) => {
-	const [questionsStatus, setQuestionsStatus] = createSignal<QuestionInfo[]>(
-		new Array(12).fill(0).map((_, index) => ({
-			answered: index < 4,
-			value: 2 ** (index + 9),
-		})),
-	);
-	console.log(questionsStatus());
+	console.log(AppState.questionsStatus());
 	return (
 		<div class={style.ladder}>
 			<span class={style.lifeLinesContainer}>
@@ -38,10 +30,10 @@ export default (props: { class?: string }) => {
 				<IconPhoneCall class={style.lifeLine} />
 			</span>
 			<ol>
-				<For each={questionsStatus()}>
+				<For each={AppState.questionsStatus()}>
 					{(v, index) => {
 						const currentQuestion =
-							(index() == 0 && !v.answered) || (questionsStatus()[index() - 1]?.answered && !v.answered);
+							(index() == 0 && !v.answered) || (AppState.questionsStatus()[index() - 1]?.answered && !v.answered);
 						return (
 							<li
 								class={style.question}
@@ -65,4 +57,4 @@ export default (props: { class?: string }) => {
 			</ol>
 		</div>
 	);
-};
+}

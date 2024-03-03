@@ -8,7 +8,7 @@ export default (props: QuestionProps) => {
 	return (
 		<h3 class={style.question}>
 			<Hexagon class={style.hexagon} />
-			<p>Bardzo długie pytanie retoryczne na temat, którym jest furrasowość Gamiego. Czy Gami to Furras?</p>
+			<p>{props.question.question}</p>
 		</h3>
 	);
 };
