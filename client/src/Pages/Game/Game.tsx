@@ -2,11 +2,8 @@ import 'solid-devtools';
 import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
-import ExampleAnswers from '@/TestData/Answer';
 import Question from '@/Components/Question/Question';
-import LifeLine1 from '@/Components/LifeLine1/LifeLine1';
-import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
-import { For, Show, onMount } from 'solid-js';
+import { For, Show } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
@@ -21,13 +18,48 @@ export default function Game() {
 	if (AppState.runID() == undefined || AppState.username() == undefined || AppState.currentQuestion() == undefined) {
 		shouldShow = false;
 		navigate('/');
-		alert('Nie masz prawa tu być');
+		// alert('Nie masz prawa tu być');
+	}
+	function handleAnwerClick(answerId: number) {
+		let runId = AppState.runID();
+		if (runId == undefined) {
+			// alert('Nie masz prawa tu być');
+			navigate('/');
+			return;
+		}
+		answerQuestion(runId, answerId).then((x) => {
+			console.log(x);
+			if (x.isCorrect) {
+				// alert('Dobrze');
+				if (x.nextQuestion == undefined) {
+					alert('Koniec');
+					navigate('/results');
+					return;
+				}
+				AppState.setQuestionsStatus((prev) => {
+					let f = prev.findIndex((v) => v.answered == false);
+					if (f != undefined) {
+						let newState = [...prev];
+						newState[f].answered = true;
+
+						return newState;
+					}
+
+					return prev;
+				});
+				console.log(AppState.questionsStatus());
+				AppState.setCurrentQuestion(x.nextQuestion);
+			} else {
+				alert('Zle');
+				navigate('/results');
+			}
+		});
 	}
 
 	return (
 		<Show when={shouldShow}>
 			<div class={style.container}>
-				<div class={style.game}>
+				<main class={style.game}>
 					{/* <div class={style.ai}>
 					<div class={style.questionImg}></div>
 					<div class={style.host}></div>
@@ -42,37 +74,8 @@ export default function Game() {
 											<AnswerButton
 												onClick={(_) => {
 													//enable animation here
-													let runId = AppState.runID();
-													if (runId == undefined) {
-														alert('Nie masz prawa tu być');
-														navigate('/');
-														return;
-													}
-													answerQuestion(runId, answer.id).then((x) => {
-														console.log(x);
-														if (x.isCorrect) {
-															alert('Dobrze');
-															if (x.nextQuestion == undefined) {
-																alert('Koniec');
-																navigate('/results');
-																return;
-															}
-															AppState.setQuestionsStatus((prev) => {
-																let f = prev.findIndex((v) => v.answered == false);
-																if (f != undefined) {
-																	let newState = [...prev];
-																	newState[f].answered = true;
-																	return newState;
-																}
-																return prev;
-															});
-															console.log(AppState.questionsStatus());
-															AppState.setCurrentQuestion(x.nextQuestion);
-														} else {
-															alert('Zle');
-															navigate('/results');
-														}
-													});
+
+													handleAnwerClick(answer.id);
 												}}
 												answer={answer}
 											/>
@@ -82,8 +85,9 @@ export default function Game() {
 							</For>
 						</ol>
 					</div>
-				</div>
-				<ProgressTracker class={style.progressTracker} />
+				</main>
+				<ProgressTracker />
+				{/* <ProgressTracker class={style.progressTracker} /> */}
 				{/* <ConfirmationModal /> */}
 				{/* <LifeLine1 /> */}
 			</div>
