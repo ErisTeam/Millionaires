@@ -5,7 +5,7 @@ import { Route, Router } from '@solidjs/router';
 
 import './index.css';
 
-import { AppStateProvider, useAppState } from './AppState';
+import { AppStateProvider } from './AppState';
 
 import GamePage from './Pages/Game/Game';
 import ApiTest from './Pages/Dev/ApiTest';
@@ -13,8 +13,6 @@ import HomePage from './Pages/Home/Home';
 import Test from './Pages/Test/Test';
 const root = document.getElementById('root');
 function App() {
-	const AppState = useAppState();
-
 	return (
 		<AppStateProvider>
 			<Router>

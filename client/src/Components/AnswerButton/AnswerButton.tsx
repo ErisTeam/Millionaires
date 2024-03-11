@@ -7,13 +7,14 @@ import { createSignal } from 'solid-js';
 type AnswerButtonProps = {
 	onClick: (answer: Answer) => void;
 	answer: Answer;
+	selected?: boolean;
 };
 export default (props: AnswerButtonProps) => {
 	const [answering, setAnswering] = createSignal(false);
 	return (
 		<HexagonButton
 			class={style.answerButton}
-			hexagonClass={style.hexagon + ' ' + (answering() ? style.answering : '')}
+			hexagonClass={style.hexagon + ' ' + (answering() && style.answering) + ' ' + (props.selected && style.selected)}
 			onClick={() => {
 				props.onClick(props.answer);
 				setAnswering(!answering());

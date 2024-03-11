@@ -3,7 +3,7 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Show } from 'solid-js';
+import { For, Show, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
@@ -22,7 +22,10 @@ export default function Game() {
 		navigate('/');
 		// alert('Nie masz prawa tu być');
 	}
-	function handleAnwerClick(answerId: number) {
+
+	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
+
+	function handleAnswerClick(answerId: number) {
 		let runId = AppState.runID();
 		if (runId == undefined) {
 			// alert('Nie masz prawa tu być');
@@ -58,6 +61,15 @@ export default function Game() {
 		});
 	}
 
+	function handleConfirmation(result: boolean) {
+		if (result) {
+			handleAnswerClick(selectedAnswerId() as number);
+			setSelectedAnswerId(undefined);
+		} else {
+			setSelectedAnswerId(undefined);
+		}
+	}
+
 	return (
 		<Show when={shouldShow}>
 			<div class={style.container}>
@@ -74,10 +86,11 @@ export default function Game() {
 									return (
 										<li>
 											<AnswerButton
+												selected={selectedAnswerId() == answer.id}
 												onClick={(_) => {
 													//enable animation here
 
-													handleAnwerClick(answer.id);
+													setSelectedAnswerId(answer.id);
 												}}
 												answer={answer}
 											/>
@@ -86,7 +99,9 @@ export default function Game() {
 								}}
 							</For>
 						</ol>
-						<ConfirmationModal />
+						<Show when={selectedAnswerId() != undefined}>
+							<ConfirmationModal onClick={handleConfirmation} />
+						</Show>
 					</div>
 				</main>
 				<ProgressTracker />
