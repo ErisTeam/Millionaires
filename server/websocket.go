@@ -66,14 +66,26 @@ func (c *WebSocketClientManager) GetRandomClient() (Snowflake, *WebSocketClientS
 	return randomKey, c.clients[randomKey]
 }
 
-// TODO: return error on infinite loop
 func (c *WebSocketClientManager) GetRandomClientExcludeSlice(exclude []Snowflake) (Snowflake, *WebSocketClientState) {
 	randomKey, state := c.GetRandomClient()
-	for _, s := range exclude {
-		if s == randomKey {
-			return c.GetRandomClientExcludeSlice(exclude)
+	var checkIfContains = func(s Snowflake, slice []Snowflake) bool {
+		for _, s := range exclude {
+			if s == randomKey {
+				return true
+			}
 		}
+		return false
 	}
+	var checked map[Snowflake]bool = make(map[Snowflake]bool)
+	for checkIfContains(randomKey, exclude) {
+		checked[randomKey] = true
+		if len(checked) == len(c.clients) {
+			return Snowflake{}, nil
+		}
+		randomKey, state = c.GetRandomClient()
+
+	}
+
 	return randomKey, state
 }
 func (c *WebSocketClientManager) getRandomClientExcludeFunc(exclude func(Snowflake, *WebSocketClientState) bool) (Snowflake, *WebSocketClientState) {

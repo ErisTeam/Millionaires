@@ -1,11 +1,16 @@
 .ConfirmationModal {
+	display: flex;
 	position: absolute;
-	width: 100%;
-
-	z-index: 5;
+	top: 0;
 	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
+	align-items: center;
+
+	z-index: 900;
+	width: 100%;
+	/* top: 50%; */
+	/* transform: translateY(-50%); */
+
+	height: 100%;
 
 	.button {
 		width: 10em;
@@ -14,23 +19,24 @@
 	}
 	ol {
 		display: flex;
-		justify-content: center;
 		position: relative;
-		&::before {
-			overflow: hidden;
-			z-index: -1;
-			content: '';
-			position: absolute;
-			width: 120%;
-			left: -10%;
-			height: 4px;
-			background: var(--secondary-500);
-			top: 50%;
-			transform: translateY(-50%);
-		}
-		list-style-type: none;
-		display: flex;
 		flex-direction: row;
+		justify-content: center;
 		gap: 0.5em;
+
+		width: 100%;
+		list-style-type: none;
+		&::before {
+			position: absolute;
+			top: 50%;
+			left: -10%;
+			transform: translateY(-50%);
+			z-index: -1;
+			background: var(--secondary-500);
+			width: 120%;
+			height: 4px;
+			overflow: hidden;
+			content: '';
+		}
 	}
 }

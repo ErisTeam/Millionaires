@@ -14,7 +14,7 @@ export default function ProgressTracker() {
 
 	console.log(AppState.questionsStatus());
 	return (
-		<div class={style.ladder}>
+		<div class={style.progressTracker}>
 			<section class={style.lifeLinesContainer}>
 				<button class={style.lifeLine}>
 					<IconUsersGroup />
@@ -26,7 +26,7 @@ export default function ProgressTracker() {
 					<IconPhoneCall />
 				</button>
 			</section>
-			<ol>
+			<ol class={style.questionList}>
 				<For each={AppState.questionsStatus()}>
 					{(v, index) => (
 						<Show

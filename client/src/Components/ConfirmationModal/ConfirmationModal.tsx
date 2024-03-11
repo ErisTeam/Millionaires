@@ -1,7 +1,4 @@
-import { Portal } from 'solid-js/web';
 import style from './ConfirmationModal.module.css';
-import Hexagon from '../Hexagon/Hexagon';
-import AnswerButton from '../AnswerButton/AnswerButton';
 import HexagonButton from '../HexagonButton/HexagonButton';
 
 export default () => {

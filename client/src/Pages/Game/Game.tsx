@@ -8,6 +8,8 @@ import { useNavigate } from '@solidjs/router';
 import { useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
 import { answerQuestion } from '@/helpers';
+import { Portal } from 'solid-js/web';
+import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
 
 export default function Game() {
 	const navigate = useNavigate();
@@ -84,11 +86,12 @@ export default function Game() {
 								}}
 							</For>
 						</ol>
+						<ConfirmationModal />
 					</div>
 				</main>
 				<ProgressTracker />
 				{/* <ProgressTracker class={style.progressTracker} /> */}
-				{/* <ConfirmationModal /> */}
+
 				{/* <LifeLine1 /> */}
 			</div>
 		</Show>

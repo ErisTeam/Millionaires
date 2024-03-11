@@ -1,172 +1,54 @@
-.ladder {
-	z-index: 10;
-	width: 100%;
-	height: 100%;
-	/* display: flex;
-	flex-direction: column;
-	justify-content: center; */
-	align-items: center;
-	font-size: 1.75em;
-
-	border-left: 2px solid var(--secondary-500);
-
-	padding: 0.5em;
-
+.progressTracker {
 	display: grid;
-	grid-template-rows: 5em 1fr;
-
-	/* grid-area: ladder; */
 
 	position: relative;
+	grid-template-rows: 5em 1fr;
+
+	align-items: center;
+	z-index: 10;
+
+	border-left: 2px solid var(--secondary-500);
 	background: var(--background-950);
-	/*TODO: change to class*/
-	& > ol {
-		list-style: none;
-		min-width: fit-content;
-		width: 100%;
-		height: 100%;
 
+	padding: 0.5em;
+	width: 100%;
+	height: 100%;
+	font-size: 1.75em;
+	.questionList {
 		display: flex;
 
 		flex-direction: column-reverse;
+		justify-content: flex-start;
 
 		gap: 0.5em;
-		justify-content: flex-start;
-	}
-	.question {
-		list-style: none;
-		align-items: center;
-		justify-items: center;
-
-		width: inherit;
-		/* height: 1.7em; */
-		height: 100%;
-
-		font-size: clamp(0.6em, 1.9vw, 1em);
-
-		text-align: right;
-		padding-left: 1em;
-		padding-right: 3em;
-		border-radius: 0.5em;
-		position: relative;
-
-		display: grid;
-
-		grid-template-columns: 1.5em 1em 100%;
-
-		& > * {
-			font-size: inherit;
-		}
-
-		&.answered {
-			.diamondFilled {
-				visibility: visible;
-			}
-		}
-
-		&.currentQuestion {
-			.hexagon {
-				fill: var(--secondary-500);
-				stroke: var(--secondary-200);
-
-				scale: 1.05;
-			}
-		}
-
-		.diamondFilled {
-			visibility: hidden;
-		}
-
-		.diamond {
-			width: 1.2em;
-			height: 1.2em;
-		}
-
-		.hexagon {
-			position: absolute;
-			left: 0;
-			top: 0;
-			width: 100%;
-			height: 100%;
-			z-index: -1;
-			stroke: var(--secondary-400);
-			stroke-width: 3px;
-			fill: var(--secondary-900);
-		}
-	}
-
-	.lifeLinesContainer {
-		position: relative;
-		display: flex;
-		flex-direction: row;
-		gap: 1em;
-		height: 100%;
 		width: 100%;
-		justify-content: center;
-		align-items: center;
-		padding-bottom: 1em;
-
-		> .lifeLine {
-			aspect-ratio: 1/1;
-			min-width: 3.5em;
-			min-height: 3.5em;
-
-			width: auto;
-			height: auto;
-
-			stroke: var(--text-50);
-			/* stroke: var(rgb(123, 101, 141)); */
-			background-color: var(--secondary-600);
-			border-radius: 50%;
-			padding: 0.25em;
-			transition: all 0.25s ease-in-out;
-			cursor: pointer;
-			border: 4px solid var(--secondary-500);
-
-			&.used {
-				background-color: var(--accent-900);
-				opacity: 0.5;
-				scale: 0.9;
-			}
-		}
-		> .lifeLine:not(.used):hover {
-			scale: 1.05;
-			transition: all 0.25s ease-in-out;
-			transform: rotateZ(5deg);
-		}
-	}
-	& > ol {
-		list-style: none;
 		min-width: fit-content;
-		width: 100%;
 		height: 100%;
+		list-style: none;
 
-		display: flex;
-
-		flex-direction: column-reverse;
-
-		gap: 0.5em;
-		justify-content: flex-start;
-		grid-area: 2/1/3/2;
-		& > .question {
-			list-style: none;
-			align-items: center;
-			justify-items: center;
-			grid-area: 2/2/3/2;
-			width: inherit;
-			/* height: 1.7em; */
-
-			height: 100%;
-
-			text-align: right;
-			padding-left: 1em;
-			padding-right: 3em;
-			border-radius: 0.5em;
+		.question {
+			display: grid;
 			position: relative;
 
-			display: grid;
-
 			grid-template-columns: 1.5em 1em 1.5fr;
+			align-items: center;
+			justify-items: center;
+			border-radius: 0.5em;
+			padding-right: 3em;
+			padding-left: 1em;
+
+			width: inherit;
+			/* height: 1.7em; */
+			height: 100%;
+
+			font-size: clamp(0.6em, 1.9vw, 1em);
+			list-style: none;
+
+			text-align: right;
+
+			& > * {
+				font-size: inherit;
+			}
 
 			&.answered {
 				.diamondFilled {
@@ -194,20 +76,66 @@
 
 			.hexagon {
 				position: absolute;
-				left: 0;
 				top: 0;
+				left: 0;
+				z-index: -1;
 				width: 100%;
 				height: 100%;
-				z-index: -1;
 				stroke: var(--secondary-400);
 				stroke-width: 3px;
 				fill: var(--secondary-900);
 			}
 		}
 	}
+
+	.lifeLinesContainer {
+		display: flex;
+		position: relative;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		gap: 1em;
+		padding-bottom: 1em;
+		width: 100%;
+		height: 100%;
+
+		> .lifeLine {
+			aspect-ratio: 1/1;
+
+			width: auto;
+			min-width: 3.5em;
+			height: auto;
+			min-height: 3.5em;
+
+			stroke: var(--text-50);
+			transition: all 0.25s ease-in-out;
+			cursor: pointer;
+			border: 4px solid var(--secondary-500);
+			border-radius: 50%;
+			/* stroke: var(rgb(123, 101, 141)); */
+			background-color: var(--secondary-600);
+			padding: 0.25em;
+
+			> svg {
+				width: 100%;
+				height: 100%;
+			}
+
+			&.used {
+				scale: 0.9;
+				opacity: 0.5;
+				background-color: var(--accent-900);
+			}
+		}
+		> .lifeLine:not(.used):hover {
+			transform: rotateZ(5deg);
+			scale: 1.05;
+			transition: all 0.25s ease-in-out;
+		}
+	}
 }
 @media (max-width: 768px) {
-	.ladder {
+	.progressTracker {
 		.question {
 			&.currentQuestion {
 				.hexagon {

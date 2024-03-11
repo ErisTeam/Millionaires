@@ -81,7 +81,7 @@ func main() {
 	})
 
 	// Gets a random question of a specified difficulty
-	// TODO: Phrase error messages better
+	// TODO: Phrase error messages better. what error?
 	app.Post("/answerQuestion", answerQuestion)
 
 	app.Get("/ws/", websocket.New(WebsocketRun))

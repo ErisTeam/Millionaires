@@ -1,14 +1,17 @@
 .container {
 	display: grid;
+	/* grid-template-areas: 'game ladder'; */
+
 	grid-template-columns: 1fr 0.3fr;
 	place-items: center;
 	width: 100vw;
 	min-height: 100vh;
-	/* grid-template-areas: 'game ladder'; */
 }
 
 .game {
 	display: grid;
+
+	position: relative;
 
 	grid-template-rows: 1fr 0.7fr;
 	grid-template-areas: 'ai' 'question';
