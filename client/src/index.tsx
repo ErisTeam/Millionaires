@@ -18,8 +18,8 @@ function App() {
 			<Router>
 				<Route path="/game" component={GamePage} />
 				<Route path="/apiTest" component={ApiTest} />
-				<Route path={'/'} component={HomePage}></Route>
-				<Route path={'/test'} component={Test}></Route>
+				<Route path="/" component={HomePage} />
+				<Route path="/test" component={Test} />
 			</Router>
 		</AppStateProvider>
 	);

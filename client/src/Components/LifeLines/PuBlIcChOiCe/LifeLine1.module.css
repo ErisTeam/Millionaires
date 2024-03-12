@@ -1,0 +1,62 @@
+.publicChoice {
+	ol {
+		display: flex;
+		flex-direction: row;
+
+		gap: 1em;
+
+		padding-top: 1em;
+		list-style: none;
+	}
+	/* TODO: rename classes */
+	.c {
+		display: grid;
+		grid-template-rows: 1fr 0.2fr;
+
+		width: 1.5em;
+		.title {
+			text-align: center;
+		}
+		&.winner {
+			.p {
+				&::after {
+					box-shadow: 0 0 15px 1px #e6882a;
+					background: #e6882a;
+				}
+				& > .title {
+					color: #e6882a;
+					--font-size: 1em;
+				}
+			}
+		}
+
+		.p {
+			position: relative;
+
+			&::after {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				transition: height 0.5s ease-in-out;
+
+				border-radius: 5px;
+				background: var(--primary-200);
+				width: 100%;
+				height: var(--percentage, 1%);
+				content: '';
+			}
+			& > .title {
+				/* content: '10%'; */
+				position: absolute;
+				--font-size: 0.8em;
+				top: calc(100% - var(--percentage, 1%) - 5% - var(--font-size));
+				transform: translateX(-50%);
+				transition: top 0.5s ease-in-out;
+				font-size: var(--font-size);
+
+				/* left: 50%; */
+				/* transform: translateX(-50%) translateY(100% - var(--percent)); */
+			}
+		}
+	}
+}

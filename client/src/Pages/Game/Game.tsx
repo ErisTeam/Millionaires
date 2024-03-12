@@ -10,6 +10,8 @@ import { Question as QuestionT } from '@/protobufMessages/Questions';
 import { answerQuestion } from '@/helpers';
 import { Portal } from 'solid-js/web';
 import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
+import LifeLine1 from '@/Components/LifeLines/PuBlIcChOiCe/LifeLine1';
+import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
 
 export default function Game() {
 	const navigate = useNavigate();
@@ -74,10 +76,9 @@ export default function Game() {
 		<Show when={shouldShow}>
 			<div class={style.container}>
 				<main class={style.game}>
-					{/* <div class={style.ai}>
-					<div class={style.questionImg}></div>
-					<div class={style.host}></div>
-				</div> */}
+					<div class={style.ai}>
+						<div class={style.host}></div>
+					</div>
 					<div class={style.questionContainer}>
 						<Question question={AppState.currentQuestion()?.question as QuestionT} />
 						<ol class={style.answers}>
@@ -102,12 +103,19 @@ export default function Game() {
 						<Show when={selectedAnswerId() != undefined}>
 							<ConfirmationModal onClick={handleConfirmation} />
 						</Show>
+						<div
+							class={style.lifeLineContainer}
+							classList={{
+								[style.publicsChoice]: true,
+							}}
+						>
+							<LifeLine1 />
+							<FriendCall />
+						</div>
 					</div>
 				</main>
 				<ProgressTracker />
 				{/* <ProgressTracker class={style.progressTracker} /> */}
-
-				{/* <LifeLine1 /> */}
 			</div>
 		</Show>
 	);

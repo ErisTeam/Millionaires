@@ -1,0 +1,36 @@
+.lifeLine {
+	--border: var(--secondary-500);
+	display: flex;
+
+	position: relative;
+
+	/* box-shadow: 5px -5px 20px 1px var(--secondary-800); */
+
+	border: 2px solid var(--border);
+	border-radius: 14px;
+
+	background: var(--background-900);
+
+	padding: 0.5em;
+	padding-right: 0.5em;
+
+	padding-bottom: 2em;
+	padding-left: 0.5em;
+
+	/* width: 15em; */
+	height: 10em;
+
+	svg {
+		position: absolute;
+		top: 90%;
+		left: 50%;
+		transform: translateX(-50%);
+		border: 2px solid var(--border);
+
+		border-radius: 100%;
+		background: var(--secondary-900);
+		width: 2em;
+
+		height: 2em;
+	}
+}

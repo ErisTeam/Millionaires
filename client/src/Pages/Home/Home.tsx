@@ -61,29 +61,8 @@ export default function StartPage() {
 							}}
 						>
 							<span>Zacznij gre!</span>
-						</HexagonButton>{' '}
+						</HexagonButton>
 					</li>
-					{/* <li>
-						<HexagonButton class={style.startButton} hexagonClass={style.hexagon}>
-							<span>Training mode</span>
-						</HexagonButton>{' '}
-					</li> */}
-					{/* <li>
-						<HexagonButton
-							class={style.startButton}
-							hexagonClass={style.hexagon}
-							onClick={() => {
-								setShowRules(!showRules());
-							}}
-						>
-							<span>Rules</span>
-						</HexagonButton>{' '}
-					</li> */}
-					{/* <li>
-						<HexagonButton class={style.startButton} hexagonClass={style.hexagon}>
-							<span>Leaderboard</span>
-						</HexagonButton>{' '}
-					</li> */}
 				</ol>
 			</LeaderboardStateProvider>
 		</div>

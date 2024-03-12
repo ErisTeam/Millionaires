@@ -19,7 +19,7 @@ export default function ProgressTracker() {
 				<button class={style.lifeLine}>
 					<IconUsersGroup />
 				</button>
-				<button class={style.lifeLine}>
+				<button class={style.lifeLine} classList={{ [style.used]: true }}>
 					<IconShieldHalfFilled />
 				</button>
 				<button class={style.lifeLine}>

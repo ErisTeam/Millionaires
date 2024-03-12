@@ -1,5 +1,6 @@
 import { IconUsersGroup } from '@tabler/icons-solidjs';
 import style from './LifeLine1.module.css';
+import line from '../LifeLine.module.css';
 import ExampleAnswers from '@/TestData/Answer';
 import { Answer } from '@/protobufMessages/Answers';
 import { For, Index, createSignal } from 'solid-js';
@@ -19,7 +20,7 @@ function weightedRandom(weights: number[]) {
 }
 
 export default () => {
-	const [percentages, setPercentages] = createSignal<{ percentage: number; answer: Answer }[]>([
+	const [percentages, setPercentages] = createSignal<{ percentage: number; answer: Answer; winner?: boolean }[]>([
 		{
 			percentage: 71,
 			answer: ExampleAnswers.fullAnswer1,
@@ -27,6 +28,7 @@ export default () => {
 		{
 			percentage: 84,
 			answer: ExampleAnswers.fullAnswer2,
+			winner: true,
 		},
 		{
 			percentage: 70,
@@ -39,20 +41,24 @@ export default () => {
 	]);
 
 	return (
-		<section class={style.lifeLine}>
+		<section class={style.publicChoice + ' ' + line.lifeLine}>
 			<ol>
 				<Index each={percentages()}>
-					{(v) => (
-						<li class={style.c} style={{ '--percentage': `${v().percentage}%` }}>
+					{(v, index) => (
+						<li
+							class={style.c}
+							classList={{ [style.winner]: v().winner }}
+							style={{ '--percentage': `${v().percentage}%` }}
+						>
 							<span class={style.p}>
-								<span>{v().percentage}%</span>
+								<span class={style.title}>{v().percentage}%</span>
 							</span>
-							<span>1</span>
+							<span class={style.title}>{String.fromCharCode('A'.charCodeAt(0) + index)}</span>
 						</li>
 					)}
 				</Index>
 			</ol>
-			<button
+			{/* <button
 				onclick={() => {
 					const votes = new Array(percentages().length).fill(0);
 					votes[Math.floor(Math.random() * votes.length)] = Math.floor(Math.random() * 100);
@@ -82,8 +88,8 @@ export default () => {
 				}}
 			>
 				Randomize Percentages
-			</button>
-			{/* <IconUsersGroup /> */}
+			</button> */}
+			<IconUsersGroup />
 		</section>
 	);
 };
