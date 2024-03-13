@@ -151,7 +151,8 @@ func answerQuestion(c *fiber.Ctx) error {
 		return c_error(c, "Error while updating analytics: `No rows affected`", fiber.ErrInternalServerError.Code)
 	}
 
-	response := protobufMessages.AnswerQuestionResponse{IsCorrect: false}
+	response := protobufMessages.AnswerQuestionResponse{IsCorrect: *answer.IsCorrect}
+
 	if *answer.IsCorrect {
 		response.IsCorrect = true
 

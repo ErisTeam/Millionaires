@@ -1,5 +1,5 @@
 import { IconUsersGroup } from '@tabler/icons-solidjs';
-import style from './LifeLine1.module.css';
+import style from './PublicChoice.module.css';
 import line from '../LifeLine.module.css';
 import ExampleAnswers from '@/TestData/Answer';
 import { Answer } from '@/protobufMessages/Answers';

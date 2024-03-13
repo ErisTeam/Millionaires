@@ -10,10 +10,10 @@ export default (props: ConfirmationModalProps) => {
 		<section class={style.ConfirmationModal}>
 			<h2>Czy na pewno?</h2>
 			<ol>
-				<HexagonButton onClick={() => props.onClick(true)} class={style.button}>
+				<HexagonButton onClick={() => props.onClick(true)} class={style.button} hexagonClass={style.confirm}>
 					Tak
 				</HexagonButton>
-				<HexagonButton onClick={() => props.onClick(false)} class={style.button}>
+				<HexagonButton onClick={() => props.onClick(false)} class={style.button} hexagonClass={style.reject}>
 					Nie
 				</HexagonButton>
 			</ol>

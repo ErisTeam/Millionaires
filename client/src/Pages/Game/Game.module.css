@@ -32,11 +32,19 @@
 		left: 0;
 		z-index: 900;
 		width: 100%;
+		height: 100%;
 
 		&.publicsChoice {
 			justify-content: end;
 			padding-top: 2em;
 			padding-right: 1.5em;
+		}
+		&.friendCall {
+			justify-content: center;
+			align-items: center;
+			backdrop-filter: blur(5px);
+
+			background: rgba(255, 255, 255, 0.3);
 		}
 	}
 
@@ -113,6 +121,9 @@
 			}
 		}
 	}
+}
+.hide {
+	display: none !important;
 }
 
 @media (max-width: 768px) {

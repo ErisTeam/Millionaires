@@ -5,6 +5,11 @@ import { GetQuestionResponse } from './protobufMessages/Questions';
 const [locale, setLocale] = createSignal<Locale>('pl_PL');
 const [runID, setRunID] = createSignal<string | undefined>(undefined);
 const [currentQuestion, setCurrentQuestion] = createSignal<GetQuestionResponse | undefined>(undefined);
+
+const [lifeLines, setLifeLines] = createSignal<
+	{ fiftyFifty: boolean; publicChoice: boolean; friendCall: boolean } | undefined
+>(undefined);
+
 const [username, setUsername] = createSignal<string | undefined>(undefined);
 type QuestionInfo = {
 	answered: boolean;
@@ -21,6 +26,18 @@ const localeJsFromat = () => {
 	return locale.replace('_', '-');
 };
 
+function useLifeLine(lifeLine: '50/50' | 'PublicChoice' | 'FriendCall') {
+	console.log(ContextValue, 'aaa');
+
+	setLifeLines((prev) => {
+		console.log(prev, 'prev');
+		let newState = { ...prev };
+		// @ts-ignore
+		newState[lifeLine] = false;
+		return newState;
+	});
+}
+
 const ContextValue = {
 	runID,
 	setRunID,
@@ -33,6 +50,9 @@ const ContextValue = {
 	locale,
 	setLocale,
 	localeJsFromat,
+	setLifeLines,
+	lifeLines,
+	useLifeLine,
 };
 const AppState = createContext(ContextValue);
 export function AppStateProvider(props: { children: JSXElement[] | JSXElement }) {

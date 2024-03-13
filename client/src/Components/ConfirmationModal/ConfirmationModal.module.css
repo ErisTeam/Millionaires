@@ -11,16 +11,32 @@
 	z-index: 900;
 	backdrop-filter: blur(5px);
 
-	background: rgba(0, 0, 0, 0.2);
+	background: rgba(255, 255, 255, 0.3);
 	width: 100%;
 
 	height: 100%;
+
+	> h2 {
+		font-weight: bold;
+		font-size: 2.5em;
+	}
 
 	.button {
 		width: 10em;
 
 		min-height: 1.5em;
+		.confirm,
+		.reject {
+			transition: fill 200ms;
+		}
+		.confirm:hover {
+			fill: green;
+		}
+		.reject:hover {
+			fill: orangered;
+		}
 	}
+
 	ol {
 		display: flex;
 		position: relative;

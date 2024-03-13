@@ -1,9 +1,25 @@
 .answerButton {
 	.marker {
 	}
+
+	.selected {
+		animation: answer 500ms infinite step-end;
+	}
 }
 .answerButton:not(:disabled):hover {
 	.hexagon {
 		fill: var(--primary-400);
+	}
+}
+
+@keyframes answer {
+	0% {
+		fill: orangered;
+	}
+	50% {
+		fill: var(--primary-800);
+	}
+	100% {
+		fill: orangered;
 	}
 }

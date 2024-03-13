@@ -52,6 +52,7 @@ export default function StartPage() {
 											}
 											return newState;
 										});
+										AppState.setLifeLines({ fiftyFifty: true, friendCall: true, publicChoice: true });
 										navigate('/game');
 									})
 									.catch((e) => {

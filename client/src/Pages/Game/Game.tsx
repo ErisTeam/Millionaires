@@ -3,19 +3,22 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Show, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
 import { answerQuestion } from '@/helpers';
 import { Portal } from 'solid-js/web';
 import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
-import LifeLine1 from '@/Components/LifeLines/PuBlIcChOiCe/LifeLine1';
+import LifeLine1 from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
 
 export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
+
+	const [overlay, setOverlay] = createSignal<null | 'FriendCall' | '50/50' | 'PublicChoice' | 'Explanation'>(null);
+
 	let shouldShow = true;
 	//Doesnt need onMount cause it should run before the component is rendered
 	//shouldShow prevents an error on ?.question
@@ -26,6 +29,7 @@ export default function Game() {
 	}
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
+	const [confirmed, setConfirmed] = createSignal(false);
 
 	function handleAnswerClick(answerId: number) {
 		let runId = AppState.runID();
@@ -65,8 +69,13 @@ export default function Game() {
 
 	function handleConfirmation(result: boolean) {
 		if (result) {
-			handleAnswerClick(selectedAnswerId() as number);
-			setSelectedAnswerId(undefined);
+			setConfirmed(true);
+			console.log(selectedAnswerId());
+			setTimeout(() => {
+				handleAnswerClick(selectedAnswerId() as number);
+				setSelectedAnswerId(undefined);
+				setConfirmed(false);
+			}, 2000);
 		} else {
 			setSelectedAnswerId(undefined);
 		}
@@ -87,10 +96,10 @@ export default function Game() {
 									return (
 										<li>
 											<AnswerButton
-												selected={selectedAnswerId() == answer.id}
+												disabled={confirmed() == true}
+												selected={selectedAnswerId() == answer.id && confirmed() == true}
 												onClick={(_) => {
 													//enable animation here
-
 													setSelectedAnswerId(answer.id);
 												}}
 												answer={answer}
@@ -100,22 +109,29 @@ export default function Game() {
 								}}
 							</For>
 						</ol>
-						<Show when={selectedAnswerId() != undefined}>
+						<Show when={selectedAnswerId() != undefined && confirmed() == false}>
 							<ConfirmationModal onClick={handleConfirmation} />
 						</Show>
 						<div
 							class={style.lifeLineContainer}
 							classList={{
-								[style.publicsChoice]: true,
+								[style.publicsChoice]: overlay() == 'PublicChoice',
+								[style.friendCall]: overlay() == 'FriendCall',
+								[style.hide]: overlay() == null,
 							}}
 						>
-							<LifeLine1 />
-							<FriendCall />
+							<Switch>
+								<Match when={overlay() == 'FriendCall'}>
+									<FriendCall />
+								</Match>
+								<Match when={overlay() == 'PublicChoice'}>
+									<LifeLine1 />
+								</Match>
+							</Switch>
 						</div>
 					</div>
 				</main>
-				<ProgressTracker />
-				{/* <ProgressTracker class={style.progressTracker} /> */}
+				<ProgressTracker onLifeLineUse={(lifeline) => {}} />
 			</div>
 		</Show>
 	);
