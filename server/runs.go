@@ -15,7 +15,7 @@ import (
 func createRun(ctx *fiber.Ctx, name string) (*Snowflake, error) {
 	var db = ctx.Locals("db").(*sql.DB)
 
-	logger.Println("Creating a run")
+	logger.Println("Creating a run...")
 
 	runId := newSnowflake(SF_RUN)
 
@@ -55,7 +55,7 @@ func startRun(ctx *fiber.Ctx) error {
 		return c_error(ctx, err.Error(), fiber.ErrBadRequest.Code)
 	}
 
-	logger.Printf("Creating a run for a user with the name `%s`", request.Name)
+	logger.Printf("Starting a run for a user with the name `%s`", request.Name)
 
 	runId, err := createRun(ctx, request.Name)
 	if err != nil {
@@ -81,7 +81,7 @@ func startRun(ctx *fiber.Ctx) error {
 		return c_error(ctx, fmt.Sprintf("Unable to encode response as bytes: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
-	logger.Printf("Succesfully created a run for a user with the name `%s` of id `%d`", request.Name, runId.RawSnowflake)
+	logger.Printf("Succesfully started a run for a user with the name `%s` of id `%d`", request.Name, runId.RawSnowflake)
 	return ctx.Status(http.StatusOK).Send(out)
 }
 

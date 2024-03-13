@@ -75,6 +75,7 @@ func main() {
 	app.Post("/startRun", startRun)
 	app.Get("/getRuns", getRuns)
 	app.Post("/endRun", endRun)
+	app.Post("/useLifeline", useLifeline)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to millionaires!")

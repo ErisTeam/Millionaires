@@ -17,5 +17,17 @@ message UseLifelineRequest {
 }
 
 message UseLifelineResponse {
-    repeated Answers.Answer answers = 1;
+    oneof payload {
+        FiftyFiftyResponse FiftyFifty = 1;
+        AudienceResponse Audience = 2;
+    }
+}
+
+message FiftyFiftyResponse {
+    bool accepted = 1;
+    repeated Answers.Answer Answers = 2;
+}
+
+message AudienceResponse {
+    bool accepted = 1;
 }

@@ -72,7 +72,8 @@ func getRandomQuestion(c *fiber.Ctx, difficulty int) (protobufMessages.GetQuesti
 func assignQuestionToRun(ctx *fiber.Ctx, runId Snowflake, questionId int32) error {
 	var db = ctx.Locals("db").(*sql.DB)
 
-	_, err := db.Exec("INSERT INTO run_questions (run_id, question_id) VALUES (?, ?);", runId.RawSnowflake, questionId)
+	_, err := db.Exec("INSERT INTO run_questions (run_id, question_id, used_lifelines) VALUES (?, ?, (SELECT runs.used_lifelines FROM runs WHERE runs.snowflake_id = 0));", runId.RawSnowflake, questionId)
+
 	return err
 }
 

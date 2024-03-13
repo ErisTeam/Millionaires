@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS run_questions (
     question_id INTEGER NOT NULL,
     answer_id INTEGER DEFAULT NULL,
     answered_at TIMESTAMP DEFAULT NULL,
-    used_lifelines INTEGER NOT NULL DEFAULT 0,
+    used_lifelines INTEGER NOT NULL,
     FOREIGN KEY (run_id) REFERENCES runs(id),
     FOREIGN KEY (question_id) REFERENCES questions(id),
     FOREIGN KEY (answer_id) REFERENCES answers(id)

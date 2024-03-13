@@ -1,4 +1,5 @@
-import { ANSWER_QUESTION_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT, END_RUN_ENDPOINT } from '../../constants';
+import { Lifeline, UseLifelineRequest, UseLifelineResponse } from '@/protobufMessages/Lifelines';
+import { ANSWER_QUESTION_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT, END_RUN_ENDPOINT, USE_LIFELINE_ENDPOINT } from '../../constants';
 import { AnswerQuestionRequest, AnswerQuestionResponse } from '../../protobufMessages/Questions';
 import {
 	StartRunRequest,
@@ -66,6 +67,22 @@ export default () => {
 		let resDecoded = AnswerQuestionResponse.decode(resUint8);
 
 		console.log(resDecoded);
+	}
+
+    const [lifeline, setLifeline] = createSignal(Lifeline.FiftyFifty);
+	async function useLifelineTest() {
+		let a = UseLifelineRequest.create();
+		a.RunSnowflakeId = runId();
+        a.Lifeline = lifeline();
+		let res = await (
+			await fetch(USE_LIFELINE_ENDPOINT, {
+				method: 'POST',
+				body: UseLifelineRequest.encode(a).finish(),
+			})
+		).arrayBuffer();
+
+		let response = UseLifelineResponse.decode(new Uint8Array(res));
+		console.log(response);
 	}
 
 	const [incomingCall, setIncomingCall] = createSignal(false);
@@ -186,6 +203,19 @@ export default () => {
 				>
 					Test Answer Question
 				</button>
+				<button
+					onClick={(e) => {
+						e.preventDefault();
+						useLifelineTest();
+					}}
+				>
+					Test Use Lifeline
+				</button>
+                <select value={0} onChange={(e) => {setLifeline(Number(e.target.value))}}>
+                    <option value={Lifeline.FiftyFifty}>50/50</option>
+                    <option value={Lifeline.FriendCall}>Zadzwoń ;3</option>
+                    <option value={Lifeline.Audience}>Te tamte co siedzom</option>
+                </select>
 				<label>
 					<p style={{ color: 'white' }}>Run ID</p>
 					<input
