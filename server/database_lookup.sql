@@ -1,14 +1,10 @@
---- Select all questions
+--- Select all ...
+SELECT * FROM players;
 SELECT * FROM questions;
-
---- Select all answers
 SELECT * FROM answers;
-
---- Select all runs
 SELECT * FROM runs;
-
---- Select all run_questions
 SELECT * FROM run_questions;
+SELECT * FROM run_lifelines;
 
 --- Select all questions for a given difficulty
 SELECT * FROM questions WHERE questions.difficulty = 2;
