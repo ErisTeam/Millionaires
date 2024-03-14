@@ -9,10 +9,12 @@ type AnswerButtonProps = {
 	answer: Answer;
 	selected?: boolean;
 	disabled?: boolean;
+	zIndex?: number;
 };
 export default (props: AnswerButtonProps) => {
 	return (
 		<HexagonButton
+			zIndex={props.zIndex}
 			disabled={props.disabled}
 			class={style.answerButton}
 			hexagonClass={style.hexagon + ' ' + (props.selected && style.selected)}

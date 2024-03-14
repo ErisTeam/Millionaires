@@ -4,15 +4,18 @@ import Leaderboard from '@/Components/Leaderboard/Leaderboard';
 import Rules from '@/Components/Rules/Rules';
 import { LeaderboardStateProvider } from '@/Components/Leaderboard/LeaderboardContext';
 import Podium from '@/Components/Podium/Podium';
-import { createSignal } from 'solid-js';
+import { Show, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useAppState } from '@/AppState';
 import { startRun } from '@/helpers';
+import Popup from '@/Components/Popup/Popup';
 
 export default function StartPage() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
 	const [showRules, setShowRules] = createSignal(false);
+
+	const [showPopup, setShowPopup] = createSignal(false);
 	return (
 		<div class={style.container}>
 			<LeaderboardStateProvider>
@@ -37,8 +40,7 @@ export default function StartPage() {
 								//We arent using the appstate directly because you cant narrow a type from a signal because each function call can possibly return a different value
 								const username = AppState.username();
 								if (username == undefined) {
-									//TODO: add pretty pop up
-									alert('Podaj imie i nazwisko!');
+									setShowPopup(true);
 									return;
 								}
 								startRun(username)
@@ -66,6 +68,19 @@ export default function StartPage() {
 					</li>
 				</ol>
 			</LeaderboardStateProvider>
+
+			<Popup hide={!showPopup()}>
+				<h2>Podaj imie i nazwisko!</h2>
+				<HexagonButton
+					class={style.popupButton}
+					hexagonClass={style.hexagon}
+					onClick={() => {
+						setShowPopup(false);
+					}}
+				>
+					Ok
+				</HexagonButton>
+			</Popup>
 		</div>
 	);
 }
