@@ -69,11 +69,11 @@ export default () => {
 		console.log(resDecoded);
 	}
 
-    const [lifeline, setLifeline] = createSignal(Lifeline.FiftyFifty);
+    const [lifeline, setLifeline] = createSignal(Lifeline.fiftyFifty);
 	async function useLifelineTest() {
 		let a = UseLifelineRequest.create();
-		a.RunSnowflakeId = runId();
-        a.Lifeline = lifeline();
+		a.runSnowflakeId = runId();
+        a.lifeline = lifeline();
 		let res = await (
 			await fetch(USE_LIFELINE_ENDPOINT, {
 				method: 'POST',
@@ -212,9 +212,9 @@ export default () => {
 					Test Use Lifeline
 				</button>
                 <select value={0} onChange={(e) => {setLifeline(Number(e.target.value))}}>
-                    <option value={Lifeline.FiftyFifty}>50/50</option>
-                    <option value={Lifeline.FriendCall}>Zadzwoń ;3</option>
-                    <option value={Lifeline.Audience}>Te tamte co siedzom</option>
+                    <option value={Lifeline.fiftyFifty}>50/50</option>
+                    <option value={Lifeline.friendCall}>Zadzwoń ;3</option>
+                    <option value={Lifeline.audience}>Te tamte co siedzom</option>
                 </select>
 				<label>
 					<p style={{ color: 'white' }}>Run ID</p>

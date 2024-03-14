@@ -29,7 +29,7 @@ const (
 	SF_CHAT
 	SF_TOKEN
 	SF_RUN
-	SF_TWELVE
+	SF_PLAYER
 	SF_THIRTEEN
 	SF_FOURTEEN
 	SF_FIFTEEN
@@ -37,7 +37,7 @@ const (
 )
 
 func (s SnowflakeType) String() string {
-	return [...]string{"USER", "VERIFICATION", "POST", "LIKE", "FOLLOW", "MESSAGE", "ATTACHMENT", "BOOKMARK", "CHAT", "TOKEN", "RUN", "OTHER", "OTHER", "OTHER", "OTHER", "OTHER"}[s]
+	return [...]string{"USER", "VERIFICATION", "POST", "LIKE", "FOLLOW", "MESSAGE", "ATTACHMENT", "BOOKMARK", "CHAT", "TOKEN", "RUN", "PLAYER", "OTHER", "OTHER", "OTHER", "OTHER"}[s]
 }
 
 type Snowflake struct {

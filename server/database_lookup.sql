@@ -6,34 +6,56 @@ SELECT * FROM runs;
 SELECT * FROM run_questions;
 SELECT * FROM run_lifelines;
 
---- Select all questions for a given difficulty
-SELECT * FROM questions WHERE questions.difficulty = 2;
+UPDATE runs SET ended = true WHERE runs.snowflake_id = 151265334534340634;
 
---- Select a random question for a given difficulty
-SELECT * FROM questions WHERE questions.difficulty = 2 ORDER BY RANDOM() LIMIT 1;
+--- Create a player
+INSERT INTO players (snowflake_id, name, tries_left) VALUES (?, ?, ?);
+
+--- Check if a player with a given name exists and return their ID
+SELECT players.snowflake_id FROM players WHERE players.name = ?;
+
+--- Get players' tries left
+SELECT players.tries_left FROM players WHERE players.snowflake_id = ?;
+
+--- Create a run for a player with the specified ID and decrement their number of tries left
+INSERT INTO runs (snowflake_id, player_id, ended) VALUES (?, ?, false); UPDATE players SET tries_left = (tries_left - 1) WHERE snowflake_id = ?;
+
+--- Get a random question for a given difficulty
+SELECT questions.* FROM questions WHERE questions.difficulty = ? ORDER BY RANDOM() LIMIT 1;
+
+--- Get answers (id, answer) for a givens question ID
+SELECT answers.id, answers.answer FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id = ?;
+
+--- Get the last question_num for a given run ID (if the run has no run_questions, returns 0)
+SELECT COALESCE((SELECT run_questions.question_num FROM run_questions JOIN runs ON runs.snowflake_id = run_questions.run_id WHERE runs.snowflake_id = ? ORDER BY run_questions.question_num DESC LIMIT 1), 0);
+
+--- Create a new run_question
+INSERT INTO run_questions (id, run_id, question_id, answer_id, answered_at, question_num) VALUES (NULL, ?, ?, NULL, NULL, (SELECT COALESCE((SELECT run_questions.question_num FROM run_questions JOIN runs ON runs.snowflake_id = run_questions.run_id WHERE runs.snowflake_id = ? ORDER BY run_questions.question_num DESC LIMIT 1)+1, 0)));
+
+--- Get current run_question for a given run ID
+SELECT run_questions.* FROM run_questions WHERE run_questions.run_id = 0 ORDER BY run_questions.question_num DESC LIMIT 1;
+
+--- Check if the given answer ID is an answer for a given question ID
+SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 296 AND questions.id = 204), FALSE) AS is_answer_relevant;
+
+--- Check if the given answer ID is a correct answer for a given question ID
+SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 620 AND questions.id = 857 AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;
+
+SELECT answers.* FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 620 AND questions.id = 857
+--- Check both of the above
+SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ?), FALSE) AS is_answer_relevant, COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ? AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;
+
+--- Get status of used lifelines in a run
+SELECT COALESCE((SELECT run_lifelines.used_lifelines FROM run_lifelines JOIN run_questions ON run_lifelines.run_question_id = run_questions.id WHERE run_questions.run_id = 0 ORDER BY run_lifelines.used_lifelines DESC LIMIT 1), 0);
+
+--- Get relevant info about runs that have ended
+SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);
+
+--- Use a lifeline
+INSERT INTO run_lifelines (id, run_question_id, used_lifelines) VALUES (NULL, ?, ?);
 
 --- Select answers for a given question in a random order
 SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == 0 ORDER BY RANDOM();
-
---- Select all run_questions for a given run
-SELECT * FROM runs WHERE runs.id = 0;
---SELECT run_questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.id WHERE runs.id == 0;
-SELECT run_questions.*, questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.snowflake_id JOIN questions ON run_questions.question_id = questions.id WHERE runs.snowflake_id == 0 ORDER BY questions.difficulty ASC;
-
---- Get question_id from answers.id
-SELECT answers.question_id FROM answers WHERE answers.id = 5;
-
---- Select current run lifeline
-SELECT runs.used_lifelines FROM runs WHERE runs.snowflake_id = 0;
-
---- Get run_question from answer_id and run_id
-SELECT run_questions.* FROM run_questions JOIN runs ON run_questions.run_id = runs.id WHERE run_questions.run_id = 145256729320357914 AND run_questions.question_id = (SELECT answers.question_id FROM answers WHERE answers.id = 4);
-
---- Get lifeline by run_id
-SELECT runs.used_lifelines FROM runs WHERE runs.snowflake_id = 1;
-
---- Update lifeline of a run
-UPDATE runs SET used_lifelines = (used_lifelines + 1) WHERE runs.snowflake_id = 1;
 
 --- 50/50 by the run id (returns IDs to eliminate)
 SELECT answers.id FROM answers WHERE answers.question_id = (SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = 150871546290765834 AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) AND answers.is_correct = FALSE ORDER BY RANDOM() LIMIT 2;

@@ -1,4 +1,5 @@
 --- Delete data from all tables
+--DELETE FROM players;
 --DELETE FROM runs;
 --DELETE FROM run_questions;
 --DELETE FROM answers;

@@ -5,12 +5,8 @@
 CREATE TABLE IF NOT EXISTS players (
     snowflake_id INTEGER UNIQUE NOT NULL primary key,
     name VARCHAR(255),
-    tries INTEGER
+    tries_left INTEGER
 );
-
-INSERT INTO players (snowflake_id, name, tries) VALUES
-(0, "Janusz Skalmar Okojski", 0),
-(1, "Andrzej Komorski", 2);
 
 --- Create and populate the `questions` table
 CREATE TABLE IF NOT EXISTS questions (
@@ -20,43 +16,6 @@ CREATE TABLE IF NOT EXISTS questions (
     impressions INTEGER
 );
 
-INSERT INTO questions (id, question, difficulty, impressions) VALUES
-(967, "Jaki kolor reprezentuje litera B w RGB?", 0, 0),
-(857, "Co jest niezbędne do programowania:", 0, 0),
-(36, "Czy woda przewodzi prąd elektryczny:", 0, 0),
-(671, "Kto założył Facebooka?", 0, 0),
-(643, "W jakim języku programowania napisany jest Minecraft?", 0, 0),
-(204, "GPU zlokalizowany jest w:", 0, 0),
-(869, "Który z tych języków służy do operacjach na bazie danych?", 1, 0),
-(275, "Kto założył Microsoft?", 1, 0),
-(356, "Język HTML służy do tworzenia:", 1, 0),
-(43, "Na którym systemie liczbowym operuje komputer?", 1, 0),
-(378, "Jaki komponent komputera odpowiada za tworzenie obrazu?", 1, 0),
-(835, "W jakim typie zmiennej zapisuje się wartość logiczną (prawda/fałsz)?", 1, 0),
-(209, "Do czego używa się kabla Jack?", 2, 0),
-(354, "Jakiej pamięci używa karta graficzna?", 2, 0),
-(842, "Tej części komputera nie można odłączyć w trakcie jego działania:", 2, 0),
-(575, "Jak nazywa się pamięć, która jest ulotna?", 2, 0),
-(814, "Co znaczy skrót HTML?", 2, 0),
-(688, "Co oznacza skrót SQL?", 2, 0),
-(461, "Do działania komputera nie wymagana/y jest:", 2, 0),
-(445, "Jaki kolor reprezentuje zapis w systemie szesnastkowym ""#FFFFFF""?", 2, 0),
-(714, "Rodzaj konstruktora abstrakcyjnego typu danych, który implementuje funkcje wiązania oraz jednostki to inaczej:", 3, 0),
-(477, "W jakim formacie czytelnego zapisu zmiennych jest zmienna “ExampleVariable”?", 3, 0),
-(838, "Język programowania Java zaliczamy do języków:", 3, 0),
-(376, "Jaki rodzaj portu ma kabel Ethernetowy?", 3, 0),
-(429, "Program służący do zamiany kodu czytelnego na kod maszynowy to:", 3, 0),
-(969, "Pełna nazwa formatu CMYK to:", 3, 0),
-(223, "Pełna nazwa języku CSS to:", 4, 0),
-(529, "Co oznacza skrót RAM?", 4, 0),
-(1005, "Ile bitów(b) ma KiloBajt(MB)?", 4, 0),
-(514, "Jak inaczej nazywa się pamięć podręczna procesora?", 4, 0),
-(904, "Jaką liczbe w systemie dziesiętnym reprezentuje ""F"" w szesnastkowym?", 4, 0),
-(566, "Standard liczb zmiennoprzecinkowych został zdefiniowany w dokumencie:", 5, 0),
-(531, "Rodzaj konstruktora abstrakcyjnego typu danych, który implementuje funkcje wiązania oraz jednostki to inaczej:", 5, 0),
-(1000, "Co oznacza skrót API?", 5, 0),
-(827, "Odpowiednikiem liczby “37A” w szesnastkowym systemie liczbowym, w systemie dziesiątkowym odpowiada liczba:", 5, 0),
-(706, "Smartfony zazwyczaj używają tej architektury, jest to:", 5, 0);
 
 --- Create and populate the `answers` table
 CREATE TABLE IF NOT EXISTS answers (
@@ -65,154 +24,9 @@ CREATE TABLE IF NOT EXISTS answers (
     answer TEXT,
     is_correct BOOLEAN,
     chosen INTEGER,
-    FOREIGN KEY (question_id) REFERENCES questions (id)
+    FOREIGN KEY (question_id) REFERENCES questions(id)
 );
 
-INSERT INTO answers (id, question_id, answer, is_correct, chosen) VALUES
-(345, 967, "Niebieski", true, 0),
-(905, 967, "Czerwony", false, 0),
-(81, 967, "Żółty", false, 0),
-(357, 967, "Brązowy", false, 0),
-(456, 857, "Klawiatura", true, 0),
-(620, 857, "Zakolanówki", false, 0),
-(123, 857, "Myszka", false, 0),
-(525, 857, "Internet", false, 0),
-(891, 36, "Tak jeśli jest destylowana", true, 0),
-(164, 36, "Tak", false, 0),
-(468, 36, "Ciepła tak", false, 0),
-(962, 36, "Zimna Tak", false, 0),
-(955, 671, "Mark Zuckerberg", true, 0),
-(114, 671, "Bill Gates", false, 0),
-(539, 671, "Elon Musk", false, 0),
-(780, 671, "Steve Jobs", false, 0),
-(108, 643, "Java", true, 0),
-(488, 643, "JavaScript", false, 0),
-(735, 643, "Rust", false, 0),
-(922, 643, "C#", false, 0),
-(588, 204, "Karcie Graficznej", true, 0),
-(296, 204, "Procesorze", false, 0),
-(666, 204, "Pamięci RAM", false, 0),
-(234, 204, "Dysku SSD", false, 0),
-(44, 869, "SQL", true, 0),
-(848, 869, "CSS", false, 0),
-(277, 869, "HTML", false, 0),
-(611, 869, "JS", false, 0),
-(675, 275, "Bill Gates", true, 0),
-(226, 275, "Mark Zuckerberg", false, 0),
-(858, 275, "Elon Musk", false, 0),
-(653, 275, "Steve Jobs", false, 0),
-(35, 356, "Stron internetowych", true, 0),
-(54, 356, "Aplikacji mobilnych", false, 0),
-(995, 356, "Aplikacji desktopowych", false, 0),
-(652, 356, "Aplikacji rzeczywistości wirtualnej", false, 0),
-(879, 43, "Dwójkowym", true, 0),
-(586, 43, "Dziesiętnym", false, 0),
-(153, 43, "Szesnastkowym", false, 0),
-(312, 43, "Ósemkowym", false, 0),
-(507, 378, "Karta graficzna", true, 0),
-(738, 378, "Procesor", false, 0),
-(1013, 378, "Płyta główna", false, 0),
-(529, 378, "Wyświetlacz", false, 0),
-(530, 835, "Boolean", true, 0),
-(409, 835, "BigInt", false, 0),
-(337, 835, "String", false, 0),
-(849, 835, "Float", false, 0),
-(33, 209, "Przesyłu audio", true, 0),
-(628, 209, "Połączenia internetowego", false, 0),
-(73, 209, "Przesyłu wideo", false, 0),
-(968, 209, "Zasilania komputera", false, 0),
-(724, 354, "VRAM", true, 0),
-(72, 354, "RAM", false, 0),
-(282, 354, "ROM", false, 0),
-(42, 354, "HDD", false, 0),
-(685, 842, "Procesor", true, 0),
-(482, 842, "Mysz", false, 0),
-(208, 842, "Klawiatura", false, 0),
-(843, 842, "Monitor", false, 0),
-(885, 575, "RAM", true, 0),
-(705, 575, "ROM", false, 0),
-(323, 575, "HDD", false, 0),
-(188, 575, "SSD", false, 0),
-(638, 814, "Hyper Text Markup Language", true, 0),
-(870, 814, "Hyper Text Machine Language", false, 0),
-(783, 814, "Hyper Text Markup Line", false, 0),
-(533, 814, "Hyper Text Machine Line", false, 0),
-(116, 688, "Structured Query Language", true, 0),
-(689, 688, "Secure Quick Login", false, 0),
-(534, 688, "Super Quantum Logic", false, 0),
-(105, 688, "System Query Locator", false, 0),
-(455, 461, "Karta dźwiękowa", true, 0),
-(74, 461, "Płyta główna", false, 0),
-(521, 461, "Pamięć RAM", false, 0),
-(299, 461, "Procesor", false, 0),
-(725, 445, "Biały", true, 0),
-(673, 445, "Czarny", false, 0),
-(330, 445, "Fioletowy", false, 0),
-(563, 445, "Zielony", false, 0),
-(60, 714, "Monad", true, 0),
-(190, 714, "Metoda", false, 0),
-(952, 714, "Funkcja", false, 0),
-(851, 714, "Klasa", false, 0),
-(739, 477, "Pascal case", true, 0),
-(341, 477, "Camel case", false, 0),
-(558, 477, "Kebab Case", false, 0),
-(769, 477, "Snake case", false, 0),
-(822, 838, "Obiektowych", true, 0),
-(864, 838, "Proceduralnych", false, 0),
-(902, 838, "Funkcjonalnych", false, 0),
-(47, 838, "Logicznych", false, 0),
-(320, 376, "Rj-45", true, 0),
-(561, 376, "Rj-65", false, 0),
-(88, 376, "USB-A", false, 0),
-(925, 376, "Jack 3.0", false, 0),
-(352, 429, "Kompilator", true, 0),
-(805, 429, "Transpilator", false, 0),
-(663, 429, "Translator", false, 0),
-(837, 429, "Tłumacz", false, 0),
-(598, 969, "Cyan Magenta Yellow Black", true, 0),
-(426, 969, "Cyan Magenta Yellow White", false, 0),
-(680, 969, "Red Green Blue Alpha", false, 0),
-(553, 969, "Cyan Magenta Yellow Kunzai", false, 0),
-(480, 223, "Cascading Style Sheets", true, 0),
-(70, 223, "Common Styling Solution", false, 0),
-(260, 223, "Cool Site Style", false, 0),
-(875, 223, "Całkiem Spoko Strona", false, 0),
-(334, 529, "Random Access Memory", true, 0),
-(884, 529, "Read Access Memory", false, 0),
-(633, 529, "Random Access Machine", false, 0),
-(229, 529, "Read Access Machine", false, 0),
-(637, 1005, "8000", true, 0),
-(408, 1005, "1000", false, 0),
-(111, 1005, "1024", false, 0),
-(141, 1005, "2048", false, 0),
-(897, 514, "Cache", true, 0),
-(555, 514, "VRAM", false, 0),
-(997, 514, "RAM", false, 0),
-(991, 514, "ROM", false, 0),
-(64, 904, "15", true, 0),
-(536, 904, "16", false, 0),
-(293, 904, "10", false, 0),
-(814, 904, "18", false, 0),
-(473, 566, "RFC-6340", true, 0),
-(273, 566, "RFC-4360", false, 0),
-(385, 566, "RFC-6430", false, 0),
-(964, 566, "RFC-4063", false, 0),
-(556, 531, "Monada", true, 0),
-(104, 531, "Metoda", false, 0),
-(896, 531, "Funkcja", false, 0),
-(263, 531, "Klasa", false, 0),
-(674, 1000, "Application Programming Interface", true, 0),
-(478, 1000, "Automated Personal Interaction", false, 0),
-(795, 1000, "Advanced Program Integration", false, 0),
-(87, 1000, "Application Interface", false, 0),
-(939, 827, "890", true, 0),
-(458, 827, "482", false, 0),
-(1011, 827, "816", false, 0),
-(773, 827, "381", false, 0),
-(569, 706, "ARM", true, 0),
-(585, 706, "x86", false, 0),
-(49, 706, "Cell", false, 0),
-(877, 706, "PowerPC", false, 0);
 
 --- Create and populate the `runs` table
 CREATE TABLE IF NOT EXISTS runs (
@@ -221,10 +35,6 @@ CREATE TABLE IF NOT EXISTS runs (
     ended BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (player_id) REFERENCES players(id)
 );
-
-INSERT INTO runs (snowflake_id, player_id, ended) VALUES
-(0, 0, true),
-(1, 1, false);
 
 --- Create and populate the `run_questions` table
 CREATE TABLE IF NOT EXISTS run_questions (
@@ -239,16 +49,6 @@ CREATE TABLE IF NOT EXISTS run_questions (
     FOREIGN KEY (answer_id) REFERENCES answers(id)
 );
 
-INSERT INTO run_questions (id, run_id, question_id, answer_id, answered_at, question_num) VALUES
-(0, 0, 967, 345, 332432423, 0),
-(1, 0, 857, 456, 332438423, 1),
-(2, 0, 36, 891, 332442423, 2),
-(3, 0, 869, 44, 332448423, 3),
-(4, 0, 275, 226, 332452423, 4),
-(5, 1, 671, 955, 332692423, 0),
-(6, 1, 643, 108, 332698423, 1),
-(7, 1, 204, 588, 332699999, 2);
-
 --- Create and populate the `run_lifelines` table
 CREATE TABLE IF NOT EXISTS run_lifelines (
     id INTEGER UNIQUE NOT NULL primary key,
@@ -256,8 +56,3 @@ CREATE TABLE IF NOT EXISTS run_lifelines (
     used_lifelines INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (run_question_id) REFERENCES run_question(id)
 );
-
-INSERT INTO run_lifelines (id, run_question_id, used_lifelines) VALUES
-(0, 1, 2),
-(1, 4, 3),
-(2, 7, 2);

@@ -72,9 +72,9 @@ func main() {
 		return c.Next()
 	})
 
-	app.Post("/startRun", startRun)
-	app.Get("/getRuns", getRuns)
-	app.Post("/endRun", endRun)
+	app.Post("/startRun", startRunRoute)
+	app.Get("/getRuns", getRunsRoute)
+	app.Post("/endRun", endRunRoute)
 	app.Post("/useLifeline", useLifeline)
 
 	app.Get("/", func(c *fiber.Ctx) error {
