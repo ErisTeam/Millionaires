@@ -87,3 +87,9 @@
 		}
 	}
 }
+.popupButton:not(:disabled):hover {
+	transition: fill 200ms;
+	.hexagon {
+		fill: green !important;
+	}
+}

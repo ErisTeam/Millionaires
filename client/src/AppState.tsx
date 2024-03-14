@@ -26,15 +26,25 @@ const localeJsFromat = () => {
 	return locale.replace('_', '-');
 };
 
-function useLifeLine(lifeLine: '50/50' | 'PublicChoice' | 'FriendCall') {
+export type LifeLineType = '50/50' | 'PublicChoice' | 'FriendCall';
+async function useLifeLine(lifeLine: LifeLineType) {
 	console.log(ContextValue, 'aaa');
 
 	setLifeLines((prev) => {
 		console.log(prev, 'prev');
 		let newState = { ...prev };
-		// @ts-ignore
-		newState[lifeLine] = false;
-		return newState;
+		switch (lifeLine) {
+			case 'PublicChoice':
+				newState.publicChoice = false;
+				break;
+			case '50/50':
+				newState.fiftyFifty = false;
+				break;
+			case 'FriendCall':
+				newState.friendCall = false;
+				break;
+		}
+		return newState as typeof prev;
 	});
 }
 

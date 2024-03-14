@@ -5,7 +5,8 @@
 
 	justify-content: center;
 	align-items: center;
-	z-index: 2;
+
+	z-index: 0; /* Without this hexagon renders under parent*/
 
 	transition: visibility 0.25s ease-in-out;
 	cursor: pointer;

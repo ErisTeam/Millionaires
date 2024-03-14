@@ -3,21 +3,23 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Match, Show, Switch, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createEffect, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { useAppState } from '@/AppState';
+import { LifeLineType, useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
 import { answerQuestion } from '@/helpers';
 import { Portal } from 'solid-js/web';
 import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
-import LifeLine1 from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
+import PublicChoice from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
+
+const AnswerAnimationTimeout = 2000;
 
 export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
 
-	const [overlay, setOverlay] = createSignal<null | 'FriendCall' | '50/50' | 'PublicChoice' | 'Explanation'>(null);
+	const [overlay, setOverlay] = createSignal<null | LifeLineType | 'Explanation'>(null);
 
 	let shouldShow = true;
 	//Doesnt need onMount cause it should run before the component is rendered
@@ -25,7 +27,6 @@ export default function Game() {
 	if (AppState.runID() == undefined || AppState.username() == undefined || AppState.currentQuestion() == undefined) {
 		shouldShow = false;
 		navigate('/');
-		// alert('Nie masz prawa tu być');
 	}
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
@@ -34,7 +35,6 @@ export default function Game() {
 	function handleAnswerClick(answerId: number) {
 		let runId = AppState.runID();
 		if (runId == undefined) {
-			// alert('Nie masz prawa tu być');
 			navigate('/');
 			return;
 		}
@@ -75,7 +75,7 @@ export default function Game() {
 				handleAnswerClick(selectedAnswerId() as number);
 				setSelectedAnswerId(undefined);
 				setConfirmed(false);
-			}, 2000);
+			}, AnswerAnimationTimeout);
 		} else {
 			setSelectedAnswerId(undefined);
 		}
@@ -96,10 +96,10 @@ export default function Game() {
 									return (
 										<li>
 											<AnswerButton
+												zIndex={2}
 												disabled={confirmed() == true}
 												selected={selectedAnswerId() == answer.id && confirmed() == true}
 												onClick={(_) => {
-													//enable animation here
 													setSelectedAnswerId(answer.id);
 												}}
 												answer={answer}
@@ -125,13 +125,17 @@ export default function Game() {
 									<FriendCall />
 								</Match>
 								<Match when={overlay() == 'PublicChoice'}>
-									<LifeLine1 />
+									<PublicChoice />
 								</Match>
 							</Switch>
 						</div>
 					</div>
 				</main>
-				<ProgressTracker onLifeLineUse={(lifeline) => {}} />
+				<ProgressTracker
+					onLifeLineUse={(lifeline) => {
+						setOverlay(lifeline);
+					}}
+				/>
 			</div>
 		</Show>
 	);

@@ -8,10 +8,16 @@ type HexagonButtonProps = {
 	class?: string;
 	hexagonClass?: string;
 	disabled?: boolean;
+	zIndex?: number;
 };
 export default (props: HexagonButtonProps) => {
 	return (
-		<button disabled={props.disabled} class={style.hexagonButton + ' ' + props.class} onClick={props.onClick}>
+		<button
+			disabled={props.disabled}
+			class={style.hexagonButton + ' ' + props.class}
+			onClick={props.onClick}
+			style={{ 'z-index': props.zIndex }}
+		>
 			<Hexagon class={style.hexagon + ' ' + props.hexagonClass} />
 			{props.children}
 		</button>
