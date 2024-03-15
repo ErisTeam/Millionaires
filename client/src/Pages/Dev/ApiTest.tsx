@@ -1,5 +1,11 @@
 import { Lifeline, UseLifelineRequest, UseLifelineResponse } from '@/protobufMessages/Lifelines';
-import { ANSWER_QUESTION_ENDPOINT, START_RUN_ENDPOINT, GET_RUNS_ENDPOINT, END_RUN_ENDPOINT, USE_LIFELINE_ENDPOINT } from '../../constants';
+import {
+	ANSWER_QUESTION_ENDPOINT,
+	START_RUN_ENDPOINT,
+	GET_RUNS_ENDPOINT,
+	END_RUN_ENDPOINT,
+	USE_LIFELINE_ENDPOINT,
+} from '../../constants';
 import { AnswerQuestionRequest, AnswerQuestionResponse } from '../../protobufMessages/Questions';
 import {
 	StartRunRequest,
@@ -69,11 +75,11 @@ export default () => {
 		console.log(resDecoded);
 	}
 
-    const [lifeline, setLifeline] = createSignal(Lifeline.fiftyFifty);
+	const [lifeline, setLifeline] = createSignal(Lifeline.fiftyFifty);
 	async function useLifelineTest() {
 		let a = UseLifelineRequest.create();
 		a.runSnowflakeId = runId();
-        a.lifeline = lifeline();
+		a.lifeline = lifeline();
 		let res = await (
 			await fetch(USE_LIFELINE_ENDPOINT, {
 				method: 'POST',

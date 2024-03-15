@@ -1,0 +1,33 @@
+.FriendCalling {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+	gap: 0.5em;
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+
+	width: 20em;
+	height: 7em;
+
+	min-height: 7em;
+
+	& > h2 {
+		font-size: 1.5em;
+	}
+
+	.buttons {
+		display: flex;
+		flex-direction: row;
+		gap: 0.5em;
+		.accept {
+		}
+		.reject {
+		}
+
+		.button {
+			height: 2em;
+			font-size: 1em;
+		}
+	}
+}

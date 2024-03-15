@@ -3,6 +3,10 @@ import HexagonButton from '../HexagonButton/HexagonButton';
 
 interface ConfirmationModalProps {
 	onClick: (result: boolean) => void;
+	texts?: {
+		confirm: string;
+		reject: string;
+	};
 }
 
 export default (props: ConfirmationModalProps) => {
@@ -11,10 +15,10 @@ export default (props: ConfirmationModalProps) => {
 			<h2>Czy na pewno?</h2>
 			<ol>
 				<HexagonButton onClick={() => props.onClick(true)} class={style.button} hexagonClass={style.confirm}>
-					Tak
+					{props.texts?.confirm || 'Tak'}
 				</HexagonButton>
 				<HexagonButton onClick={() => props.onClick(false)} class={style.button} hexagonClass={style.reject}>
-					Nie
+					{props.texts?.reject || 'Nie'}
 				</HexagonButton>
 			</ol>
 		</section>

@@ -3,7 +3,7 @@ import style from './PublicChoice.module.css';
 import line from '../LifeLine.module.css';
 import ExampleAnswers from '@/TestData/Answer';
 import { Answer } from '@/protobufMessages/Answers';
-import { For, Index, createSignal } from 'solid-js';
+import { For, Index, createSignal, onMount } from 'solid-js';
 
 function weightedRandom(weights: number[]) {
 	let cumulativeWeights: number[] = [];
@@ -20,25 +20,46 @@ function weightedRandom(weights: number[]) {
 }
 
 export default () => {
-	const [percentages, setPercentages] = createSignal<{ percentage: number; answer: Answer; winner?: boolean }[]>([
+	const [percentages, setPercentages] = createSignal<{ percentage: number; winner?: boolean }[]>([
 		{
 			percentage: 71,
-			answer: ExampleAnswers.fullAnswer1,
 		},
 		{
 			percentage: 84,
-			answer: ExampleAnswers.fullAnswer2,
 			winner: true,
 		},
 		{
 			percentage: 70,
-			answer: ExampleAnswers.fullAnswer2,
 		},
 		{
 			percentage: 33,
-			answer: ExampleAnswers.fullAnswer2,
 		},
+		// {
+		// 	percentage: 33,
+		// },
+		// {
+		// 	percentage: 33,
+		// },
+		// {
+		// 	percentage: 33,
+		// },
+		// {
+		// 	percentage: 33,
+		// },
 	]);
+
+	// onMount(() => {
+	// 	let c = 0;
+	// 	let r = setInterval(() => {
+	// 		setPercentages((prev)=>{
+	// 			let new = [...prev]
+	// 			for (let i = 0; i < new.length; i++) {
+
+	// 			}
+	// 		})
+
+	// 	}, 100);
+	// });
 
 	return (
 		<section class={style.publicChoice + ' ' + line.lifeLine}>

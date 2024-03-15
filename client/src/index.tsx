@@ -11,6 +11,7 @@ import GamePage from './Pages/Game/Game';
 import ApiTest from './Pages/Dev/ApiTest';
 import HomePage from './Pages/Home/Home';
 import Test from './Pages/Test/Test';
+import GameOver from './Components/GameOver/GameOver';
 const root = document.getElementById('root');
 function App() {
 	return (
@@ -20,6 +21,7 @@ function App() {
 				<Route path="/apiTest" component={ApiTest} />
 				<Route path="/" component={HomePage} />
 				<Route path="/test" component={Test} />
+				<Route path="/results" component={GameOver} />
 			</Router>
 		</AppStateProvider>
 	);

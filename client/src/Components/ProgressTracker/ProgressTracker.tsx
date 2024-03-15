@@ -8,11 +8,12 @@ import {
 import style from './ProgressTracker.module.css';
 import { For, Show } from 'solid-js';
 import Hexagon from '../Hexagon/Hexagon';
-import { LifeLineType, useAppState } from '@/AppState';
+import { useAppState } from '@/AppState';
 import { createAutoAnimate } from '@formkit/auto-animate/solid';
+import { Lifeline, UseLifelineResponse } from '@/protobufMessages/Lifelines';
 
 type ProgressTrackerProps = {
-	onLifeLineUse(lifeline: LifeLineType): void;
+	onLifeLineUse(lifeline: Lifeline, response: UseLifelineResponse): void;
 };
 
 export default function ProgressTracker(props: ProgressTrackerProps) {
@@ -29,8 +30,12 @@ export default function ProgressTracker(props: ProgressTrackerProps) {
 				<button
 					class={style.lifeLine}
 					onclick={() => {
-						AppState.useLifeLine('PublicChoice').then(() => {
-							props.onLifeLineUse('PublicChoice');
+						AppState.useLifeLine(Lifeline.audience).then((res) => {
+							if (!res) {
+								alert('Error');
+								return;
+							}
+							props.onLifeLineUse(Lifeline.audience, res);
 						});
 					}}
 					classList={{ [style.used]: !AppState.lifeLines()?.publicChoice }}
@@ -40,8 +45,12 @@ export default function ProgressTracker(props: ProgressTrackerProps) {
 				<button
 					class={style.lifeLine}
 					onclick={() => {
-						AppState.useLifeLine('50/50').then(() => {
-							props.onLifeLineUse('50/50');
+						AppState.useLifeLine(Lifeline.fiftyFifty).then((res) => {
+							if (!res) {
+								alert('Error');
+								return;
+							}
+							props.onLifeLineUse(Lifeline.fiftyFifty, res);
 						});
 					}}
 					classList={{ [style.used]: !AppState.lifeLines()?.fiftyFifty }}
@@ -51,8 +60,12 @@ export default function ProgressTracker(props: ProgressTrackerProps) {
 				<button
 					class={style.lifeLine}
 					onclick={() => {
-						AppState.useLifeLine('FriendCall').then(() => {
-							props.onLifeLineUse('FriendCall');
+						AppState.useLifeLine(Lifeline.friendCall).then((res) => {
+							if (!res) {
+								alert('Error');
+								return;
+							}
+							props.onLifeLineUse(Lifeline.friendCall, res);
 						});
 					}}
 					classList={{ [style.used]: !AppState.lifeLines()?.friendCall }}

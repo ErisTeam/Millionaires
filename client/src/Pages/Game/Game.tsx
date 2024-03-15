@@ -3,15 +3,16 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Match, Show, Switch, createEffect, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { LifeLineType, useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
 import { answerQuestion } from '@/helpers';
-import { Portal } from 'solid-js/web';
 import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal';
 import PublicChoice from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
+import FriendCalling from '@/Components/LifeLines/FriendCalling/FriendCalling';
+import { AudienceResponse, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
 
 const AnswerAnimationTimeout = 2000;
 
@@ -19,7 +20,8 @@ export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
 
-	const [overlay, setOverlay] = createSignal<null | LifeLineType | 'Explanation'>(null);
+	const [overlay, setOverlay] = createSignal<null | LifeLineType | 'FriendCalling'>(null);
+	const [LifeLineData, setLifeLineData] = createSignal<FiftyFiftyResponse | AudienceResponse | null>(null);
 
 	let shouldShow = true;
 	//Doesnt need onMount cause it should run before the component is rendered
@@ -32,47 +34,50 @@ export default function Game() {
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
 	const [confirmed, setConfirmed] = createSignal(false);
 
-	function handleAnswerClick(answerId: number) {
+	async function answer(answerId: number) {
 		let runId = AppState.runID();
 		if (runId == undefined) {
 			navigate('/');
 			return;
 		}
-		answerQuestion(runId, answerId).then((x) => {
-			console.log(x);
-			if (x.isCorrect) {
-				// alert('Dobrze');
-				if (x.nextQuestion == undefined) {
-					alert('Koniec');
-					navigate('/results');
-					return;
-				}
-				AppState.setQuestionsStatus((prev) => {
-					let f = prev.findIndex((v) => v.answered == false);
-					if (f != undefined) {
-						let newState = [...prev];
-						newState[f].answered = true;
-
-						return newState;
-					}
-
-					return prev;
-				});
-				console.log(AppState.questionsStatus());
-				AppState.setCurrentQuestion(x.nextQuestion);
-			} else {
-				alert('Zle');
-				navigate('/results');
-			}
-		});
+		return answerQuestion(runId, answerId);
 	}
 
 	function handleConfirmation(result: boolean) {
 		if (result) {
 			setConfirmed(true);
 			console.log(selectedAnswerId());
-			setTimeout(() => {
-				handleAnswerClick(selectedAnswerId() as number);
+
+			let promise = answer(selectedAnswerId() as number);
+			if (promise == undefined) return;
+
+			setTimeout(async () => {
+				let result = await promise;
+				console.log(result);
+				if (result!.isCorrect) {
+					if (result!.nextQuestion == undefined) {
+						alert('Koniec');
+						navigate('/results');
+						return;
+					}
+					AppState.setQuestionsStatus((prev) => {
+						let f = prev.findIndex((v) => v.answered == false);
+						if (f != undefined) {
+							let newState = [...prev];
+							newState[f].answered = true;
+
+							return newState;
+						}
+
+						return prev;
+					});
+					console.log(AppState.questionsStatus());
+					AppState.setCurrentQuestion(result!.nextQuestion);
+				} else {
+					alert('Zle');
+					navigate('/results');
+				}
+
 				setSelectedAnswerId(undefined);
 				setConfirmed(false);
 			}, AnswerAnimationTimeout);
@@ -80,6 +85,10 @@ export default function Game() {
 			setSelectedAnswerId(undefined);
 		}
 	}
+
+	function onCall() {}
+
+	AppState.websocket.onCall = onCall;
 
 	return (
 		<Show when={shouldShow}>
@@ -116,7 +125,7 @@ export default function Game() {
 							class={style.lifeLineContainer}
 							classList={{
 								[style.publicsChoice]: overlay() == 'PublicChoice',
-								[style.friendCall]: overlay() == 'FriendCall',
+								[style.friendCall]: overlay() == 'FriendCall' || overlay() == 'FriendCalling',
 								[style.hide]: overlay() == null,
 							}}
 						>
@@ -127,15 +136,48 @@ export default function Game() {
 								<Match when={overlay() == 'PublicChoice'}>
 									<PublicChoice />
 								</Match>
+								<Match when={overlay() == 'FriendCalling'}>
+									<FriendCalling name={AppState.websocket.incomingCall()?.callerName} onClick={(res) => {}} />
+								</Match>
 							</Switch>
 						</div>
 					</div>
 				</main>
 				<ProgressTracker
 					onLifeLineUse={(lifeline) => {
-						setOverlay(lifeline);
+						let l: LifeLineType | null = null;
+						switch (lifeline) {
+							case Lifeline.audience:
+								l = 'PublicChoice';
+								break;
+							case Lifeline.fiftyFifty:
+								l = '50/50';
+								break;
+							case Lifeline.friendCall:
+								l = 'FriendCall';
+								break;
+						}
+						if (!l) {
+							return;
+						}
+						setOverlay(l);
 					}}
 				/>
+				<select
+					value={overlay() || 'none'}
+					onchange={(e) => {
+						if (e.currentTarget.value == 'null') {
+							setOverlay(null);
+							return;
+						}
+						setOverlay(e.currentTarget.value as LifeLineType);
+					}}
+				>
+					<option value="null">none</option>
+					<option value="PublicChoice">PublicChoice</option>
+					<option value="FriendCall">FriendCall</option>
+					<option value="FriendCalling">FriendCalling</option>
+				</select>
 			</div>
 		</Show>
 	);

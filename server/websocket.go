@@ -36,6 +36,8 @@ type ClientMapType = map[Snowflake]*WebSocketClientState
 type WebSocketClientManager struct {
 	clients ClientMapType
 
+	unidentifiedClients []*websocket.Conn
+
 	dbConnection *sql.DB
 }
 
@@ -103,7 +105,24 @@ func (c *WebSocketClientManager) getRandomClientExcludeFunc(exclude func(Snowfla
 	return randomKey, state
 }
 
-func WebsocketRun(c *websocket.Conn) {
+func (c *WebSocketClientManager) removeUnidentifiedClient(conn *websocket.Conn) {
+	for i, con := range c.unidentifiedClients {
+		if con == conn {
+			c.unidentifiedClients = append(c.unidentifiedClients[:i], c.unidentifiedClients[i+1:]...)
+			return
+		}
+	}
+}
+
+func (c *WebSocketClientManager) identifyClient(conn *websocket.Conn, runId Snowflake) {
+	c.removeUnidentifiedClient(conn)
+	clientState := new(WebSocketClientState)
+	clientState.resetCall()
+	clientState.connection = conn
+	c.clients[runId] = clientState
+}
+
+func WebsocketRun(conn *websocket.Conn) {
 	var (
 		mt  int
 		msg []byte
@@ -112,19 +131,19 @@ func WebsocketRun(c *websocket.Conn) {
 
 	// c.SetReadDeadline()
 
-	var clientManager = c.Locals("clientManager").(*WebSocketClientManager)
+	var clientManager = conn.Locals("clientManager").(*WebSocketClientManager)
 
-	indentifyTimer := time.NewTimer(time.Second * 10)
-	go func() {
-		<-indentifyTimer.C
-		println("Identify timeout")
+	// indentifyTimer := time.NewTimer(time.Second * 10)
+	// go func() {
+	// 	<-indentifyTimer.C
+	// 	println("Identify timeout")
 
-		err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Identify timeout"))
-		if err != nil {
-			println("write: ", err.Error())
-		}
+	// 	err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Identify timeout"))
+	// 	if err != nil {
+	// 		println("write: ", err.Error())
+	// 	}
 
-	}()
+	// }()
 	closed := make(chan bool)
 	const heartBeatInterval = time.Second * 30
 	const heartBeatMiliseconds = int64(heartBeatInterval / time.Millisecond)
@@ -137,22 +156,29 @@ func WebsocketRun(c *websocket.Conn) {
 				return
 
 			case <-heartBeatTimer.C:
-				c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Heartbeat timeout"))
+				conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Heartbeat timeout"))
 				return
 			}
 		}
 	}()
 
-	c.SetCloseHandler(func(code int, text string) error {
+	conn.SetCloseHandler(func(code int, text string) error {
 		println("close: ", code, text)
+
+		var deleted = false
 		for s, c2 := range clientManager.clients {
-			if c2.connection == c {
+			if c2.connection == conn {
 				delete(clientManager.clients, s)
+				deleted = true
 				break
 			}
 		}
+		if !deleted {
+			clientManager.removeUnidentifiedClient(conn)
+		}
+
 		closed <- true
-		err := c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(code, text), time.Now().Add(time.Second*5))
+		err := conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(code, text), time.Now().Add(time.Second*5))
 		if err != nil {
 			println("write: ", err.Error())
 		}
@@ -162,18 +188,28 @@ func WebsocketRun(c *websocket.Conn) {
 	noIdentifiedResponse, err := websocket_fasthttp.NewPreparedMessage(websocket.CloseMessage, websocket_fasthttp.FormatCloseMessage(websocket.CloseNormalClosure, "Invalid run id"))
 	if err != nil {
 		println("proto: ", err.Error())
-		c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Failed to prepare error message"))
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Failed to prepare error message"))
 
 		return
 	}
 
+	res := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Connected, Payload: &protobufMessages.WebsocketMessage_ConnectedResponse{ConnectedResponse: &protobufMessages.ConnectedResponsePayload{HeartbeatInterval: int32(heartBeatMiliseconds)}}}
+	msg, err = proto.Marshal(res)
+	if err != nil {
+		println("proto: ", err.Error())
+		return
+	}
+
+	conn.WriteMessage(websocket.BinaryMessage, msg)
+	clientManager.unidentifiedClients = append(clientManager.unidentifiedClients, conn)
+
 	for {
-		if mt, msg, err = c.ReadMessage(); err != nil {
+		if mt, msg, err = conn.ReadMessage(); err != nil {
 			println("read: ", err.Error())
 			break
 		}
 		if mt == websocket.PingMessage {
-			c.WriteControl(websocket.PongMessage, msg, time.Now().Add(time.Second*5))
+			conn.WriteControl(websocket.PongMessage, msg, time.Now().Add(time.Second*5))
 			continue
 		}
 
@@ -191,22 +227,22 @@ func WebsocketRun(c *websocket.Conn) {
 				println("proto: ", err.Error())
 				return
 			}
-			c.WriteMessage(websocket.BinaryMessage, msg)
+			conn.WriteMessage(websocket.BinaryMessage, msg)
 		case protobufMessages.MessageType_Identify:
-			indentifyTimer.Stop()
+			// indentifyTimer.Stop()
 
 			heartBeatTimer.Reset(heartBeatTimerValue)
 
 			msg := protoMsg.GetIdentify()
 			if msg == nil {
-				c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseUnsupportedData, "no data"))
+				conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseUnsupportedData, "no data"))
 				return
 			}
 
 			runId, err := snowflakeFromString(msg.RunSnowflakeId)
 			if err != nil {
 				println("proto: ", err.Error())
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 
 				break
 			}
@@ -218,39 +254,35 @@ func WebsocketRun(c *websocket.Conn) {
 
 			if row.Scan(&ended) != nil {
 				println("Run not found", runId.StringIDDec())
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 
 				break
 			}
 			if ended {
 				println("proto: ", "Run ended")
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 
 				break
 			}
 
 			logger.Println("Identified client with run id: ", runId)
 
-			clientState := new(WebSocketClientState)
-			clientState.inCall = false
-			clientState.connection = c
-			clientState.target = nil
-			clientManager.clients[runId] = clientState
+			clientManager.identifyClient(conn, runId)
 
-			response, err := proto.Marshal(&protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Identify, Payload: &protobufMessages.WebsocketMessage_IdentifyResponse{IdentifyResponse: &protobufMessages.IdentifyResponsePayload{HeartbeatInterval: int32(heartBeatMiliseconds)}}})
+			response, err := proto.Marshal(&protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Identify, Payload: &protobufMessages.WebsocketMessage_Empty{Empty: &protobufMessages.EmptyPayload{}}})
 			if err != nil {
 				println("proto: ", err.Error())
 				return
 			}
-			c.WriteMessage(websocket.BinaryMessage, response)
+			conn.WriteMessage(websocket.BinaryMessage, response)
 
 		case protobufMessages.MessageType_StartCall:
 			println("recv: ", "StartCall")
-			var currentId, currentClient = clientManager.GetClientByConnection(c)
+			var currentId, currentClient = clientManager.GetClientByConnection(conn)
 
 			if currentClient == nil {
 				println("recv: ", "StartCall: No client found")
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 				break
 			}
 			msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Error}
@@ -262,7 +294,7 @@ func WebsocketRun(c *websocket.Conn) {
 					println("proto: ", err.Error())
 					return
 				}
-				c.WriteMessage(websocket.BinaryMessage, response)
+				conn.WriteMessage(websocket.BinaryMessage, response)
 				break
 			}
 			if len(clientManager.clients) == 1 {
@@ -272,7 +304,7 @@ func WebsocketRun(c *websocket.Conn) {
 					println("proto: ", err.Error())
 					return
 				}
-				c.WriteMessage(websocket.BinaryMessage, response)
+				conn.WriteMessage(websocket.BinaryMessage, response)
 				break
 			}
 
@@ -340,7 +372,7 @@ func WebsocketRun(c *websocket.Conn) {
 				println("proto: ", err.Error())
 				return
 			}
-			c.WriteMessage(websocket.BinaryMessage, response)
+			conn.WriteMessage(websocket.BinaryMessage, response)
 
 			currentClient.callTimeout = time.NewTimer(time.Second * 15)
 			go func() {
@@ -365,10 +397,10 @@ func WebsocketRun(c *websocket.Conn) {
 			println("recv: ", "IncomingCallResponse")
 
 			msg := protoMsg.GetCallResponse()
-			var _, currentClient = clientManager.GetClientByConnection(c)
+			var _, currentClient = clientManager.GetClientByConnection(conn)
 			if currentClient == nil {
 				println("recv: ", "IncomingCallResponse: No client found")
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 				break
 			}
 			logger.Println("Call response: ", msg.Accepted)
@@ -384,7 +416,7 @@ func WebsocketRun(c *websocket.Conn) {
 					return
 				}
 
-				c.WriteMessage(websocket.BinaryMessage, response)
+				conn.WriteMessage(websocket.BinaryMessage, response)
 
 				currentClient.resetCall()
 
@@ -404,10 +436,10 @@ func WebsocketRun(c *websocket.Conn) {
 		case protobufMessages.MessageType_Message:
 			println("recv: ", protoMsg.GetMessage().Message)
 
-			var _, currentClient = clientManager.GetClientByConnection(c)
+			var _, currentClient = clientManager.GetClientByConnection(conn)
 			if currentClient == nil {
 				println("recv: ", "Message: No client found")
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 				break
 			}
 			if currentClient.target == nil {
@@ -423,7 +455,7 @@ func WebsocketRun(c *websocket.Conn) {
 					println("proto: ", err.Error())
 					return
 				}
-				c.WriteMessage(websocket.BinaryMessage, binary)
+				conn.WriteMessage(websocket.BinaryMessage, binary)
 				break
 			}
 			targetConnection := clientManager.clients[*currentClient.target].connection
@@ -435,12 +467,12 @@ func WebsocketRun(c *websocket.Conn) {
 			}
 
 			targetConnection.WriteMessage(websocket.BinaryMessage, binary)
-			c.WriteMessage(websocket.BinaryMessage, binary)
+			conn.WriteMessage(websocket.BinaryMessage, binary)
 			break
 		case protobufMessages.MessageType_EndCall:
-			var _, currentClient = clientManager.GetClientByConnection(c)
+			var _, currentClient = clientManager.GetClientByConnection(conn)
 			if currentClient == nil {
-				c.WritePreparedMessage(noIdentifiedResponse)
+				conn.WritePreparedMessage(noIdentifiedResponse)
 				return
 			}
 

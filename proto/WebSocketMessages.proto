@@ -19,6 +19,10 @@ enum MessageType{
     Identify = 8;
 
     Error = 9;
+
+    Connected = 10;
+
+    LeaderboardUpdate = 11;
 }
 
 message WebsocketMessage{
@@ -31,12 +35,15 @@ message WebsocketMessage{
         IncomingCallPayload incomingCall = 6;
         CallResponsePayload callResponse = 7;
        
-        IdentifyResponsePayload identifyResponse = 8;
+        ConnectedResponsePayload connectedResponse = 8;
 
         ErrorPayload error = 9;
     }
 }
-
+message LeaderBoardUpdatePayload{
+    repeated string names = 1;
+    repeated int32 scores = 2;
+}
 message EmptyPayload{
     // Empty
 }
@@ -48,7 +55,7 @@ message ErrorPayload{
 message IdentifyPayload{
     string runSnowflakeId = 1;
 }
-message IdentifyResponsePayload{
+message ConnectedResponsePayload{
     int32 heartbeatInterval = 1;
 }
 message MessagePayload{
