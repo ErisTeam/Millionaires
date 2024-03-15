@@ -1,13 +1,26 @@
+import { For } from 'solid-js';
 import style from './HostTalks.module.css';
-import { For, Index } from 'solid-js';
 
 export default function HostTalks() {
-	let text = 'dsadsadjoe ufhuesihf ihebzkvb ekawbfbabf ';
+	let text = '';
 	let output = text.split('');
 	return (
-		<div>
-			{/* for each letter add letter */}
-			<For each={output}>{(x) => <span>{x}</span>}</For>
+		<div class={style.talky}>
+			<button
+				onClick={() => {
+					text = 'To jest przykładowe zdanie.';
+					output = text.split('');
+				}}
+			>
+				Reset
+			</button>
+			<For each={output}>
+				{(char, index) => (
+					<span key={index()} class={style.letter} style={{ animationDelay: `${index() * 1}s` } as any}>
+						{char}
+					</span>
+				)}
+			</For>
 		</div>
 	);
 }

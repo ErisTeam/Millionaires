@@ -1,0 +1,18 @@
+.talky {
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0 auto;
+}
+
+.letter {
+	animation: fadeIn 0.3s ease-in-out both;
+}
+
+@keyframes fadeIn {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
