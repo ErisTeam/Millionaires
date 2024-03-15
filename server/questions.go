@@ -28,23 +28,32 @@ func difficultyScaling(questionNum int) int {
     return -1;
 }
 
-// Returns a random question with answers (id and text only) of a specified difficulty
+// Returns a random question with answers (id and text only) of a specified difficulty, that hasn't yet been seen by a player with the specified ID.
 // Difficulty ranges from <0,5>
-func getRandomQuestion(c *fiber.Ctx, difficulty int) (*protobufMessages.GetQuestionResponse, error) {
+func getRandomQuestion(c *fiber.Ctx, runId Snowflake, difficulty int) (*protobufMessages.GetQuestionResponse, error) {
 	var db = c.Locals("db").(*sql.DB)
 
 	logger.Printf("Getting a random question of difficulty `%d`.", difficulty)
 
-	randomQuestionRow := db.QueryRow("SELECT questions.* FROM questions WHERE questions.difficulty = ? ORDER BY RANDOM() LIMIT 1;", difficulty)
+	randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq JOIN runs r ON rq.run_id = r.snowflake_id WHERE r.player_id = (SELECT player_id FROM runs WHERE snowflake_id = ?)) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
 	var randomQuestion protobufMessages.Question
     err := randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
+
+    // Fallback if the player has seen all questions, could be done with a query but who cares
     if err == sql.ErrNoRows {
-        logger.Printf("No question could be found with a difficulty of `%d`.", difficulty)
+        logger.Printf("Player of a run with id `%d` has seen all questions of difficulty `%d`.", runId.RawSnowflake, difficulty)
+        randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq WHERE rq.run_id = ?) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
+        err = randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
+
+        if err == sql.ErrNoRows {
+            logger.Printf("No question could be found with a difficulty of `%d`.", difficulty)
+        }
     }
 
     if err != nil {
         return nil, err
     }
+
 
 	answerRows, err := db.Query("SELECT answers.id, answers.answer FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id = ?;", randomQuestion.Id)
 	if err != nil {
@@ -100,7 +109,7 @@ func answerQuestion(c *fiber.Ctx) error {
 	runId := snowflakeFromInt(int64(runIdAsInt))
 
 	// Get current `run_question`
-	runQuestionRow := db.QueryRow("SELECT run_questions.id, run_questions.question_id, run_questions.answer_id, run_questions.answered_at, run_questions.question_num FROM run_questions WHERE run_questions.run_id = ? ORDER BY run_questions.question_num DESC LIMIT 1;", runId.RawSnowflake)
+	runQuestionRow := db.QueryRow("SELECT run_questions.id, run_questions.question_id, run_questions.answer_id, run_questions.answered_at, run_questions.question_num FROM run_questions WHERE run_questions.run_id = ? ORDER BY run_questions.question_num DESC LIMIT 1;", runId.RawSnowflake, runId.RawSnowflake)
 	var runQuestionId int
 	var runQuestionQuestionId int
 	var runQuestionAnswerId sql.NullInt64
@@ -161,7 +170,7 @@ func answerQuestion(c *fiber.Ctx) error {
 	if isAnswerCorrect {
 		// Get the next question if the quiz is still going
 		if runQuestionNum+1 < 12 {
-			question, err := getRandomQuestion(c, difficultyScaling(runQuestionNum+1))
+			question, err := getRandomQuestion(c, runId, difficultyScaling(runQuestionNum+1))
 			if err != nil {
 				return c_error(c, fmt.Sprintf("Error while getting a random question: `%s`", err), fiber.ErrInternalServerError.Code)
 			}

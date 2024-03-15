@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"millionairesServer/protobufMessages"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"google.golang.org/protobuf/proto"
 )
+
+var noMoreTriesError = errors.New("Player has no more tries left")
 
 const DEFAULT_TRIES_LEFT = 3
 
@@ -38,15 +41,15 @@ func getPlayerTriesLeft(ctx *fiber.Ctx, playerId Snowflake) (int, error) {
 
 	triesLeftRow := db.QueryRow("SELECT players.tries_left FROM players WHERE players.snowflake_id = ?;", playerId.RawSnowflake)
 
-    var triesLeft int
-    err := triesLeftRow.Scan(&triesLeft)
+	var triesLeft int
+	err := triesLeftRow.Scan(&triesLeft)
 
 	if err == sql.ErrNoRows {
-        logger.Printf("Player with id `%d` doesn't exist!", playerId.RawSnowflake)
+		logger.Printf("Player with id `%d` doesn't exist!", playerId.RawSnowflake)
 	}
-    if err != nil {
+	if err != nil {
 		return 0, err
-    }
+	}
 
 	logger.Printf("Player with id `%d` has `%d` tries left!", playerId.RawSnowflake, triesLeft)
 
@@ -60,18 +63,18 @@ func doesPlayerExist(ctx *fiber.Ctx, name string) (bool, *Snowflake, error) {
 
 	playerIdRow := db.QueryRow("SELECT players.snowflake_id FROM players WHERE players.name = ?;", name)
 
-    var playerIdNum int64
-    err := playerIdRow.Scan(&playerIdNum)
+	var playerIdNum int64
+	err := playerIdRow.Scan(&playerIdNum)
 
 	if err == sql.ErrNoRows {
-        logger.Printf("Player with name `%s` doesn't exist!", name)
+		logger.Printf("Player with name `%s` doesn't exist!", name)
 		return false, nil, nil
 	} else if err != nil {
 		return false, nil, err
-    }
+	}
 
-    playerId := snowflakeFromInt(playerIdNum)
-    logger.Printf("Player with name `%s` already exists! (`%d`)", name, playerId.RawSnowflake)
+	playerId := snowflakeFromInt(playerIdNum)
+	logger.Printf("Player with name `%s` already exists! (`%d`)", name, playerId.RawSnowflake)
 
 	return true, &playerId, nil
 }
@@ -84,16 +87,16 @@ func createRun(ctx *fiber.Ctx, playerId Snowflake) (*Snowflake, error) {
 
 	logger.Printf("Creating a run for a player with id `%d`.", playerId.RawSnowflake)
 
-    // Check if the player has still tries left
-    triesLeft, err := getPlayerTriesLeft(ctx, playerId)
-    if err != nil {
-        return nil, err
-    }
+	// Check if the player has still tries left
+	triesLeft, err := getPlayerTriesLeft(ctx, playerId)
+	if err != nil {
+		return nil, err
+	}
 
-    if triesLeft <= 0 {
-        logger.Printf("Player with id `%d` has no more tries left, abandoning run creation.", playerId.RawSnowflake)
-        return nil, nil
-    }
+	if triesLeft <= 0 {
+		logger.Printf("Player with id `%d` has no more tries left, abandoning run creation.", playerId.RawSnowflake)
+		return nil, noMoreTriesError
+	}
 
 	runId := newSnowflake(SF_RUN)
 	_, err = db.Exec("INSERT INTO runs (snowflake_id, player_id, ended) VALUES (?, ?, false); UPDATE players SET tries_left = (tries_left - 1) WHERE snowflake_id = ?;", runId.RawSnowflake, playerId.RawSnowflake, playerId.RawSnowflake)
@@ -140,37 +143,40 @@ func startRunRoute(ctx *fiber.Ctx) error {
 		return c_error(ctx, err.Error(), fiber.ErrBadRequest.Code)
 	}
 
-    logger.Print("`startRun` route visited with the following data { ", request, " }")
+	logger.Print("`startRun` route visited with the following data { ", request, " }")
 
-    playerExist, playerId, err := doesPlayerExist(ctx, request.Name)
+	playerExist, playerId, err := doesPlayerExist(ctx, request.Name)
+	if err != nil {
+		return c_error(ctx, fmt.Sprintf("Unable to check if a player with name `%s` exists. Reason: `%s`", request.Name, err), fiber.ErrInternalServerError.Code)
+	}
 
-    if (!playerExist) {
-        playerId, err = createPlayer(ctx, request.Name)
-        if err != nil {
-            return c_error(ctx, fmt.Sprintf("Unable to create a new player with the name `%s`. Reason: `%s`", request.Name, err), fiber.ErrInternalServerError.Code)
-        }
-    }
+	if !playerExist {
+		playerId, err = createPlayer(ctx, request.Name)
+		if err != nil {
+			return c_error(ctx, fmt.Sprintf("Unable to create a new player with the name `%s`. Reason: `%s`", request.Name, err), fiber.ErrInternalServerError.Code)
+		}
+	}
 
 	runId, err := createRun(ctx, *playerId)
 
-    // Player has no tries left
-    // TODO: Send an appropariate response
-    if runId == nil && err == nil {
-        return nil
-    }
-
-	if err != nil {
-        return c_error(ctx, fmt.Sprintf("Unable to start a new run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+	// Player has no tries left
+	// TODO: Send an appropariate response
+	if runId == nil && errors.Is(err, noMoreTriesError) {
+		return nil
 	}
 
-	question, err := getRandomQuestion(ctx, 0)
 	if err != nil {
-        return c_error(ctx, fmt.Sprintf("Unable to get the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, fmt.Sprintf("Unable to start a new run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+	}
+
+	question, err := getRandomQuestion(ctx, *runId, 0)
+	if err != nil {
+		return c_error(ctx, fmt.Sprintf("Unable to get the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
 	}
 
 	err = assignQuestionToRun(ctx, *runId, snowflakeFromInt(int64(question.Question.Id)))
 	if err != nil {
-        return c_error(ctx, fmt.Sprintf("Unable to assign the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, fmt.Sprintf("Unable to assign the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
 	}
 
 	var response = protobufMessages.StartRunResponse{}
@@ -193,27 +199,27 @@ func getRunsRoute(ctx *fiber.Ctx) error {
 
 	run_rows, err := db.Query("SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);")
 	if err != nil {
-        c_error(ctx, fmt.Sprintf("Unable to get runs. Reason: `%s`", err), fiber.ErrInternalServerError.Code)
+		c_error(ctx, fmt.Sprintf("Unable to get runs. Reason: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
 	var response = protobufMessages.GetRunsResponse{}
 	for run_rows.Next() {
 		run := protobufMessages.EndedRunStat{}
-        var usedLifelines sql.NullInt64
+		var usedLifelines sql.NullInt64
 		run_rows.Scan(&run.RunId, &run.Name, &usedLifelines, &run.Won)
-        if !usedLifelines.Valid {
-            run.UsedLifelines = 0
-        } else {
-            run.UsedLifelines = int32(usedLifelines.Int64)
-        }
-        response.Runs = append(response.Runs, &run)
+		if !usedLifelines.Valid {
+			run.UsedLifelines = 0
+		} else {
+			run.UsedLifelines = int32(usedLifelines.Int64)
+		}
+		response.Runs = append(response.Runs, &run)
 	}
 	defer run_rows.Close()
-    run_rows.Close()
+	run_rows.Close()
 
 	out, err := proto.Marshal(&response)
 	if err != nil {
-        c_error(ctx, fmt.Sprintf("Runs got, unable to encode response as bytes. Reason: `%s`", err), fiber.ErrInternalServerError.Code)
+		c_error(ctx, fmt.Sprintf("Runs got, unable to encode response as bytes. Reason: `%s`", err), fiber.ErrInternalServerError.Code)
 	}
 
 	logger.Println("Successfuly got runs.")

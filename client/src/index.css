@@ -1,15 +1,4 @@
 :root {
-	--bg0: #0f001f;
-	--bg1: #2a1b3d;
-	--bg2: #3c2a55;
-	--bg3: #4d3a6e;
-	--bg4: #5e4a87;
-	--bg5: #6d5a9f;
-
-	--primary: #6d4390;
-	--secondary: #b960d8;
-	--accent: #e59eef;
-
 	--gold: rgb(255, 217, 0);
 
 	--overlays-background: rgba(255, 255, 255, 0.3);
