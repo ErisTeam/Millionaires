@@ -13,20 +13,30 @@ import (
 )
 
 type Lifeline int
+
 const (
-    LlUnknown Lifeline = -1
-    LlFiftyFifty Lifeline = 1
-    LlFriendCall Lifeline = 2
-    LlAudience Lifeline = 4
+	LlUnknown    Lifeline = -1
+	LlFiftyFifty Lifeline = 1
+	LlFriendCall Lifeline = 2
+	LlAudience   Lifeline = 4
 )
 
 func lifelineAsString(lifeline Lifeline) string {
-    switch (lifeline) {
-        case LlFiftyFifty: { return "FiftyFifty" }
-        case LlFriendCall: { return "FriendCall" }
-        case LlAudience: { return "Audience" }
-    }
-    return "UNKNOWN"
+	switch lifeline {
+	case LlFiftyFifty:
+		{
+			return "FiftyFifty"
+		}
+	case LlFriendCall:
+		{
+			return "FriendCall"
+		}
+	case LlAudience:
+		{
+			return "Audience"
+		}
+	}
+	return "UNKNOWN"
 }
 
 func useLifeline(ctx *fiber.Ctx) error {
@@ -87,12 +97,12 @@ func useLifeline(ctx *fiber.Ctx) error {
                 discarded_answers_sql.Close()
             }
 
-            response.Payload = &protobufMessages.UseLifelineResponse_FiftyFifty{
-                FiftyFifty: &protobufMessages.FiftyFiftyResponse {
-                    Accepted: !wasLifelineUsed,
-                    Answers: discarded_answers,
-                },
-            }
+			response.Payload = &protobufMessages.UseLifelineResponse_FiftyFifty{
+				FiftyFifty: &protobufMessages.FiftyFiftyResponse{
+					Accepted: !wasLifelineUsed,
+					Answers:  discarded_answers,
+				},
+			}
 
             break;
         }
@@ -121,9 +131,9 @@ func useLifeline(ctx *fiber.Ctx) error {
                 return c_error(ctx, fmt.Sprintf("Error while trying to update the runs' state: `%s`", err.Error()), fiber.ErrBadRequest.Code)
             }
 
-            logger.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Accepted)", lifelineAsString(lifeline), runId.RawSnowflake)
-        }
-    }
+			logger.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Accepted)", lifelineAsString(lifeline), runId.RawSnowflake)
+		}
+	}
 
 	return ctx.Status(http.StatusOK).Send(out)
 }
