@@ -6,8 +6,6 @@ SELECT * FROM runs;
 SELECT * FROM run_questions;
 SELECT * FROM run_lifelines;
 
-UPDATE runs SET ended = true WHERE runs.snowflake_id = 151265334534340634;
-
 --- Create a player
 INSERT INTO players (snowflake_id, name, tries_left) VALUES (?, ?, ?);
 
@@ -33,15 +31,14 @@ SELECT COALESCE((SELECT run_questions.question_num FROM run_questions JOIN runs 
 INSERT INTO run_questions (id, run_id, question_id, answer_id, answered_at, question_num) VALUES (NULL, ?, ?, NULL, NULL, (SELECT COALESCE((SELECT run_questions.question_num FROM run_questions JOIN runs ON runs.snowflake_id = run_questions.run_id WHERE runs.snowflake_id = ? ORDER BY run_questions.question_num DESC LIMIT 1)+1, 0)));
 
 --- Get current run_question for a given run ID
-SELECT run_questions.* FROM run_questions WHERE run_questions.run_id = 0 ORDER BY run_questions.question_num DESC LIMIT 1;
+SELECT run_questions.* FROM run_questions WHERE run_questions.run_id = ? ORDER BY run_questions.question_num DESC LIMIT 1;
 
 --- Check if the given answer ID is an answer for a given question ID
-SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 296 AND questions.id = 204), FALSE) AS is_answer_relevant;
+SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ?), FALSE) AS is_answer_relevant;
 
 --- Check if the given answer ID is a correct answer for a given question ID
-SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 620 AND questions.id = 857 AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;
+SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ? AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;
 
-SELECT answers.* FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = 620 AND questions.id = 857
 --- Check both of the above
 SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ?), FALSE) AS is_answer_relevant, COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ? AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;
 
@@ -58,4 +55,10 @@ INSERT INTO run_lifelines (id, run_question_id, used_lifelines) VALUES (NULL, ?,
 SELECT answers.* FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id == 0 ORDER BY RANDOM();
 
 --- 50/50 by the run id (returns IDs to eliminate)
-SELECT answers.id FROM answers WHERE answers.question_id = (SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = 150871546290765834 AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) AND answers.is_correct = FALSE ORDER BY RANDOM() LIMIT 2;
+SELECT answers.id FROM answers WHERE answers.question_id = (SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = ? AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) AND answers.is_correct = FALSE ORDER BY RANDOM() LIMIT 2;
+
+--- Get a random question of a specified difficulty that hasn't been seen yet by the player
+SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq JOIN runs r ON rq.run_id = r.snowflake_id WHERE r.player_id = (SELECT player_id FROM runs WHERE snowflake_id = ?)) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;
+
+--- Get a random question of a specified difficulty that hasn't been seen yet in the current run
+SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq WHERE rq.run_id = ?) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;

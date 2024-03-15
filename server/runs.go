@@ -169,7 +169,7 @@ func startRunRoute(ctx *fiber.Ctx) error {
 		return c_error(ctx, fmt.Sprintf("Unable to start a new run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
 	}
 
-	question, err := getRandomQuestion(ctx, 0)
+	question, err := getRandomQuestion(ctx, *runId, 0)
 	if err != nil {
 		return c_error(ctx, fmt.Sprintf("Unable to get the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
 	}
