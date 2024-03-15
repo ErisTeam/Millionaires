@@ -9,7 +9,7 @@
 		position: absolute;
 		top: 0;
 		left: 0;
-		opacity: 0.15;
+		opacity: 0.25;
 		z-index: -1;
 		background: url('../../assets/backgroundnumbers.png') repeat center center;
 		background-size: 20% 40%;
