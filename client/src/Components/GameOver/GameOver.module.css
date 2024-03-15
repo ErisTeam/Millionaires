@@ -1,0 +1,38 @@
+.GameOver {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	border-radius: 2em;
+	width: 25em;
+	height: 15em;
+
+	&::after {
+		position: absolute;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		opacity: 0.25;
+		z-index: -1;
+		background-color: black;
+		width: 100vw;
+		height: 100vh;
+		content: '';
+	}
+	& > h3 {
+		padding: 0.25em;
+		width: 100%;
+		color: red;
+		font-size: 3em;
+		text-align: center;
+	}
+	& > span {
+		padding: 0.5em;
+		font-size: 1.5em;
+	}
+
+	& > .menuButton .hexagon {
+		scale: 0.75;
+	}
+}
