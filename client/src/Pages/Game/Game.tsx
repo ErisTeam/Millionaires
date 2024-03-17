@@ -23,12 +23,11 @@ export default function Game() {
 	const [overlay, setOverlay] = createSignal<null | LifeLineType | 'FriendCalling'>(null);
 	const [LifeLineData, setLifeLineData] = createSignal<FiftyFiftyResponse | AudienceResponse | null>(null);
 
-	let shouldShow = true;
 	//Doesnt need onMount cause it should run before the component is rendered
 	//shouldShow prevents an error on ?.question
 	if (AppState.runID() == undefined || AppState.username() == undefined || AppState.currentQuestion() == undefined) {
-		shouldShow = false;
 		navigate('/');
+		return;
 	}
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
@@ -91,94 +90,92 @@ export default function Game() {
 	AppState.websocket.onCall = onCall;
 
 	return (
-		<Show when={shouldShow}>
-			<div class={style.container}>
-				<main class={style.game}>
-					<div class={style.ai}>
-						<div class={style.host}></div>
-					</div>
-					<div class={style.questionContainer}>
-						<Question question={AppState.currentQuestion()?.question as QuestionT} />
-						<ol class={style.answers}>
-							<For each={AppState.currentQuestion()?.answers}>
-								{(answer) => {
-									return (
-										<li>
-											<AnswerButton
-												zIndex={2}
-												disabled={confirmed() == true}
-												selected={selectedAnswerId() == answer.id && confirmed() == true}
-												onClick={(_) => {
-													setSelectedAnswerId(answer.id);
-												}}
-												answer={answer}
-											/>
-										</li>
-									);
-								}}
-							</For>
-						</ol>
-						<Show when={selectedAnswerId() != undefined && confirmed() == false}>
-							<ConfirmationModal onClick={handleConfirmation} />
-						</Show>
-						<div
-							class={style.lifeLineContainer}
-							classList={{
-								[style.publicsChoice]: overlay() == 'PublicChoice',
-								[style.friendCall]: overlay() == 'FriendCall' || overlay() == 'FriendCalling',
-								[style.hide]: overlay() == null,
+		<div class={style.container}>
+			<main class={style.game}>
+				<div class={style.ai}>
+					<div class={style.host}></div>
+				</div>
+				<div class={style.questionContainer}>
+					<Question question={AppState.currentQuestion()?.question as QuestionT} />
+					<ol class={style.answers}>
+						<For each={AppState.currentQuestion()?.answers}>
+							{(answer) => {
+								return (
+									<li>
+										<AnswerButton
+											zIndex={2}
+											disabled={confirmed() == true}
+											selected={selectedAnswerId() == answer.id && confirmed() == true}
+											onClick={(_) => {
+												setSelectedAnswerId(answer.id);
+											}}
+											answer={answer}
+										/>
+									</li>
+								);
 							}}
-						>
-							<Switch>
-								<Match when={overlay() == 'FriendCall'}>
-									<FriendCall />
-								</Match>
-								<Match when={overlay() == 'PublicChoice'}>
-									<PublicChoice />
-								</Match>
-								<Match when={overlay() == 'FriendCalling'}>
-									<FriendCalling name={AppState.websocket.incomingCall()?.callerName} onClick={(res) => {}} />
-								</Match>
-							</Switch>
-						</div>
+						</For>
+					</ol>
+					<Show when={selectedAnswerId() != undefined && confirmed() == false}>
+						<ConfirmationModal onClick={handleConfirmation} />
+					</Show>
+					<div
+						class={style.lifeLineContainer}
+						classList={{
+							[style.publicsChoice]: overlay() == 'PublicChoice',
+							[style.friendCall]: overlay() == 'FriendCall' || overlay() == 'FriendCalling',
+							[style.hide]: overlay() == null,
+						}}
+					>
+						<Switch>
+							<Match when={overlay() == 'FriendCall'}>
+								<FriendCall />
+							</Match>
+							<Match when={overlay() == 'PublicChoice'}>
+								<PublicChoice />
+							</Match>
+							<Match when={overlay() == 'FriendCalling'}>
+								<FriendCalling name={AppState.websocket.incomingCall()?.callerName} onClick={(res) => {}} />
+							</Match>
+						</Switch>
 					</div>
-				</main>
-				<ProgressTracker
-					onLifeLineUse={(lifeline) => {
-						let l: LifeLineType | null = null;
-						switch (lifeline) {
-							case Lifeline.audience:
-								l = 'PublicChoice';
-								break;
-							case Lifeline.fiftyFifty:
-								l = '50/50';
-								break;
-							case Lifeline.friendCall:
-								l = 'FriendCall';
-								break;
-						}
-						if (!l) {
-							return;
-						}
-						setOverlay(l);
-					}}
-				/>
-				<select
-					value={overlay() || 'none'}
-					onchange={(e) => {
-						if (e.currentTarget.value == 'null') {
-							setOverlay(null);
-							return;
-						}
-						setOverlay(e.currentTarget.value as LifeLineType);
-					}}
-				>
-					<option value="null">none</option>
-					<option value="PublicChoice">PublicChoice</option>
-					<option value="FriendCall">FriendCall</option>
-					<option value="FriendCalling">FriendCalling</option>
-				</select>
-			</div>
-		</Show>
+				</div>
+			</main>
+			<ProgressTracker
+				onLifeLineUse={(lifeline) => {
+					let l: LifeLineType | null = null;
+					switch (lifeline) {
+						case Lifeline.audience:
+							l = 'PublicChoice';
+							break;
+						case Lifeline.fiftyFifty:
+							l = '50/50';
+							break;
+						case Lifeline.friendCall:
+							l = 'FriendCall';
+							break;
+					}
+					if (!l) {
+						return;
+					}
+					setOverlay(l);
+				}}
+			/>
+			<select
+				value={overlay() || 'none'}
+				onchange={(e) => {
+					if (e.currentTarget.value == 'null') {
+						setOverlay(null);
+						return;
+					}
+					setOverlay(e.currentTarget.value as LifeLineType);
+				}}
+			>
+				<option value="null">none</option>
+				<option value="PublicChoice">PublicChoice</option>
+				<option value="FriendCall">FriendCall</option>
+				<option value="FriendCalling">FriendCalling</option>
+			</select>
+		</div>
 	);
 }

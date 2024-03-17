@@ -18,16 +18,16 @@ message UseLifelineRequest {
 
 message UseLifelineResponse {
     oneof payload {
-        FiftyFiftyResponse FiftyFifty = 1;
-        AudienceResponse Audience = 2;
+        FiftyFiftyResponse fiftyFifty = 1;
+        AudienceResponse audience = 2;
     }
 }
 
 message FiftyFiftyResponse {
-    bool accepted = 1;
-    repeated Answers.Answer Answers = 2;
+    repeated Answers.Answer answers = 2;
 }
 
 message AudienceResponse {
-    bool accepted = 1;
+    repeated Answers.Answer answers = 1;
+    repeated float percentage = 2;
 }

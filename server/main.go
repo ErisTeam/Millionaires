@@ -56,9 +56,7 @@ func main() {
 	app.Use(cors.New(cors.ConfigDefault))
 
 	app.Use(func(c *fiber.Ctx) error {
-		if websocket.IsWebSocketUpgrade(c) {
-			c.Locals("clientManager", &clientManager)
-		}
+		c.Locals("clientManager", &clientManager)
 		return c.Next()
 	})
 

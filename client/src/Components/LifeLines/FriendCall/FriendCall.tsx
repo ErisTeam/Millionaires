@@ -2,8 +2,45 @@ import style from './FriendCall.module.css';
 import line from '../LifeLine.module.css';
 import { IconPhoneOff } from '@tabler/icons-solidjs';
 import Hexagon from '@/Components/Hexagon/Hexagon';
+import { Show, createSignal, onCleanup } from 'solid-js';
 
 export default () => {
+	const [showTimeLeft, setShowTimeLeft] = createSignal(false);
+	const [timeLeft, setTimeLeft] = createSignal(45);
+	let a = () => {
+		setShowTimeLeft(true);
+		if (timeLeft() <= 5) {
+			clearInterval(showInterval);
+			return;
+		}
+
+		console.log('showTimeLeft', showTimeLeft());
+		setTimeout(() => {
+			setShowTimeLeft(false);
+		}, 1000);
+
+		showInterval = setTimeout(a, Math.pow(timeLeft(), 2) + 2);
+	};
+	let showInterval = setTimeout(a, 5000);
+
+	const interval = setInterval(() => {
+		setTimeLeft(timeLeft() - 1);
+		if (timeLeft() <= 0) {
+			clearInterval(interval);
+		}
+	}, 1000);
+
+	onCleanup(() => {
+		clearInterval(interval);
+		clearInterval(showInterval);
+	});
+
+	function format(seconds: number) {
+		let minutes = Math.floor(seconds / 60);
+		let sec = seconds % 60;
+		return `${minutes < 10 ? '0' + minutes : minutes}:${sec < 10 ? '0' + sec : sec}`;
+	}
+
 	return (
 		<section class={style.container + ' ' + line.lifeLine}>
 			<div class={style.friendCall}>
@@ -62,8 +99,10 @@ export default () => {
 					<Hexagon />
 				</div>
 			</div>
-			<button class={line.icon + ' ' + style.icon}>
-				<IconPhoneOff />
+			<button class={line.icon + ' ' + style.icon} onmouseenter={() => {}} onmouseleave={() => {}}>
+				<Show when={showTimeLeft()} fallback={<IconPhoneOff />}>
+					{format(timeLeft())}
+				</Show>
 			</button>
 		</section>
 	);

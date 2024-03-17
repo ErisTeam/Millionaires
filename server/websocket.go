@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"math/rand"
 
 	"millionairesServer/protobufMessages"
@@ -120,6 +121,130 @@ func (c *WebSocketClientManager) identifyClient(conn *websocket.Conn, runId Snow
 	clientState.resetCall()
 	clientState.connection = conn
 	c.clients[runId] = clientState
+}
+
+func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) error {
+	println("recv: ", "StartCall")
+	var currentClient, succes = clientManager.clients[currentId]
+	if !succes {
+		return errors.New("no client found")
+	}
+	var conn = currentClient.connection
+	if conn == nil {
+		return errors.New("no client found")
+	}
+
+	if currentClient == nil {
+		return errors.New("no client found")
+	}
+	msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Error}
+	if currentClient.inCall {
+
+		msg.Payload = &protobufMessages.WebsocketMessage_Error{Error: &protobufMessages.ErrorPayload{Message: "Already in call"}}
+		response, err := proto.Marshal(msg)
+		if err != nil {
+			println("proto: ", err.Error())
+			return err
+		}
+		conn.WriteMessage(websocket.BinaryMessage, response)
+		return errors.New("already in call")
+	}
+	if len(clientManager.clients) == 1 {
+		msg.Payload = &protobufMessages.WebsocketMessage_Error{Error: &protobufMessages.ErrorPayload{Message: "No other clients"}}
+		response, err := proto.Marshal(msg)
+		if err != nil {
+			println("proto: ", err.Error())
+			return err
+		}
+		conn.WriteMessage(websocket.BinaryMessage, response)
+		return errors.New("no other clients")
+	}
+
+	var targetId, targetState = clientManager.getRandomClientExcludeFunc(func(s Snowflake, state *WebSocketClientState) bool {
+		if s == currentId {
+			return false
+		}
+		if state.inCall {
+			return false
+		}
+		return true
+	})
+
+	if targetState == nil {
+		for id, state := range clientManager.clients {
+			if currentId != id {
+				targetId = id
+				targetState = state
+				break
+			}
+		}
+	}
+	currentClient.target = &targetId
+	targetState.target = &currentId
+	currentClient.inCall = true
+	targetState.inCall = true
+
+	var callerName string
+	var calleeName string
+	rows, err := clientManager.dbConnection.Query("SELECT runs.snowflake_id,players.name from players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ? OR runs.snowflake_id = ?", currentId.RawSnowflake, targetId.RawSnowflake)
+	if err != nil {
+		println("db: ", err.Error())
+		return err
+	}
+	for rows.Next() {
+		var snowflakeId string
+		var name string
+		if err := rows.Scan(&snowflakeId, &name); err != nil {
+			println("db: ", err.Error())
+			return err
+		}
+		if snowflakeId == currentId.StringIDDec() {
+			callerName = name
+		} else {
+			calleeName = name
+		}
+	}
+
+	msg = &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_IncomingCall}
+	msg.Payload = &protobufMessages.WebsocketMessage_IncomingCall{IncomingCall: &protobufMessages.IncomingCallPayload{CallerName: callerName}}
+
+	response, err := proto.Marshal(msg)
+	if err != nil {
+		println("proto: ", err.Error())
+		return err
+	}
+
+	targetState.connection.WriteMessage(websocket.BinaryMessage, response)
+
+	msg.Type = protobufMessages.MessageType_CallServerResponse
+	msg.Payload = &protobufMessages.WebsocketMessage_CallServerResponse{CallServerResponse: &protobufMessages.CallServerResponsePayload{CalleeName: calleeName}}
+
+	response, err = proto.Marshal(msg)
+	if err != nil {
+		println("proto: ", err.Error())
+		return err
+	}
+	conn.WriteMessage(websocket.BinaryMessage, response)
+
+	currentClient.callTimeout = time.NewTimer(time.Second * 15)
+	go func() {
+		<-currentClient.callTimeout.C
+		if currentClient.inCall {
+			currentClient.resetCall()
+			targetState.resetCall()
+
+			msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_EndCall}
+			response, err := proto.Marshal(msg)
+			if err != nil {
+				println("proto: ", err.Error())
+				return
+			}
+			currentClient.connection.WriteMessage(websocket.BinaryMessage, response)
+			targetState.connection.WriteMessage(websocket.BinaryMessage, response)
+
+		}
+	}()
+	return nil
 }
 
 func WebsocketRun(conn *websocket.Conn) {
@@ -278,120 +403,6 @@ func WebsocketRun(conn *websocket.Conn) {
 
 		case protobufMessages.MessageType_StartCall:
 			println("recv: ", "StartCall")
-			var currentId, currentClient = clientManager.GetClientByConnection(conn)
-
-			if currentClient == nil {
-				println("recv: ", "StartCall: No client found")
-				conn.WritePreparedMessage(noIdentifiedResponse)
-				break
-			}
-			msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Error}
-			if currentClient.inCall {
-
-				msg.Payload = &protobufMessages.WebsocketMessage_Error{Error: &protobufMessages.ErrorPayload{Message: "Already in call"}}
-				response, err := proto.Marshal(msg)
-				if err != nil {
-					println("proto: ", err.Error())
-					return
-				}
-				conn.WriteMessage(websocket.BinaryMessage, response)
-				break
-			}
-			if len(clientManager.clients) == 1 {
-				msg.Payload = &protobufMessages.WebsocketMessage_Error{Error: &protobufMessages.ErrorPayload{Message: "No other clients"}}
-				response, err := proto.Marshal(msg)
-				if err != nil {
-					println("proto: ", err.Error())
-					return
-				}
-				conn.WriteMessage(websocket.BinaryMessage, response)
-				break
-			}
-
-			var targetId, targetState = clientManager.getRandomClientExcludeFunc(func(s Snowflake, state *WebSocketClientState) bool {
-				if s == currentId {
-					return false
-				}
-				if state.inCall {
-					return false
-				}
-				return true
-			})
-
-			if targetState == nil {
-				for id, state := range clientManager.clients {
-					if currentId != id {
-						targetId = id
-						targetState = state
-						break
-					}
-				}
-			}
-			currentClient.target = &targetId
-			targetState.target = &currentId
-			currentClient.inCall = true
-			targetState.inCall = true
-
-			var callerName string
-			var calleeName string
-			rows, err := clientManager.dbConnection.Query("SELECT snowflake_id,name FROM runs WHERE snowflake_id = ? OR snowflake_id = ?", currentId.RawSnowflake, targetId.RawSnowflake)
-			if err != nil {
-				println("db: ", err.Error())
-				return
-			}
-			for rows.Next() {
-				var snowflakeId string
-				var name string
-				if err := rows.Scan(&snowflakeId, &name); err != nil {
-					println("db: ", err.Error())
-					return
-				}
-				if snowflakeId == currentId.StringIDDec() {
-					callerName = name
-				} else {
-					calleeName = name
-				}
-			}
-
-			msg = &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_IncomingCall}
-			msg.Payload = &protobufMessages.WebsocketMessage_IncomingCall{IncomingCall: &protobufMessages.IncomingCallPayload{CallerName: callerName}}
-
-			response, err := proto.Marshal(msg)
-			if err != nil {
-				println("proto: ", err.Error())
-				return
-			}
-
-			targetState.connection.WriteMessage(websocket.BinaryMessage, response)
-
-			msg.Type = protobufMessages.MessageType_CallServerResponse
-			msg.Payload = &protobufMessages.WebsocketMessage_CallServerResponse{CallServerResponse: &protobufMessages.CallServerResponsePayload{CalleeName: calleeName}}
-
-			response, err = proto.Marshal(msg)
-			if err != nil {
-				println("proto: ", err.Error())
-				return
-			}
-			conn.WriteMessage(websocket.BinaryMessage, response)
-
-			currentClient.callTimeout = time.NewTimer(time.Second * 15)
-			go func() {
-				<-currentClient.callTimeout.C
-				if currentClient.inCall {
-					currentClient.resetCall()
-					targetState.resetCall()
-
-					msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_EndCall}
-					response, err := proto.Marshal(msg)
-					if err != nil {
-						println("proto: ", err.Error())
-						return
-					}
-					currentClient.connection.WriteMessage(websocket.BinaryMessage, response)
-					targetState.connection.WriteMessage(websocket.BinaryMessage, response)
-
-				}
-			}()
 
 		case protobufMessages.MessageType_CallResponse:
 			println("recv: ", "IncomingCallResponse")

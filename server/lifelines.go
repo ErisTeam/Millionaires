@@ -76,10 +76,12 @@ func useLifeline(ctx *fiber.Ctx) error {
 	response := protobufMessages.UseLifelineResponse{}
 	lifeline := LlUnknown
 	wasLifelineUsed := true
+
 	switch request.Lifeline {
 	case protobufMessages.Lifeline_fiftyFifty:
 		{
 			lifeline = LlFiftyFifty
+			logger.Printf("status is %d %d", lifelinesStatus, int(lifeline))
 			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
 			discarded_answers := []*protobufMessages.Answer{}
 
@@ -100,8 +102,7 @@ func useLifeline(ctx *fiber.Ctx) error {
 
 			response.Payload = &protobufMessages.UseLifelineResponse_FiftyFifty{
 				FiftyFifty: &protobufMessages.FiftyFiftyResponse{
-					Accepted: !wasLifelineUsed,
-					Answers:  discarded_answers,
+					Answers: discarded_answers,
 				},
 			}
 
@@ -110,10 +111,26 @@ func useLifeline(ctx *fiber.Ctx) error {
 	case protobufMessages.Lifeline_friendCall:
 		{
 			lifeline = LlFriendCall
+			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
+			if !wasLifelineUsed {
+				var clientManager = ctx.Locals("clientManager").(*WebSocketClientManager)
+				var conn = clientManager.clients[runId]
+				if conn == nil {
+					return c_error(ctx, fmt.Sprintf("Unable to use lifeline: `%s`", "No client found"), fiber.ErrInternalServerError.Code)
+				}
+				err := clientManager.StartCall(runId)
+				if err != nil {
+					return c_error(ctx, fmt.Sprintf("Unable to use lifeline: `%s`", err), fiber.ErrInternalServerError.Code)
+				}
+			}
 		}
 	case protobufMessages.Lifeline_audience:
 		{
 			lifeline = LlAudience
+			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
+			if !wasLifelineUsed {
+
+			}
 		}
 	}
 

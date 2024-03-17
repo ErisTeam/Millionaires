@@ -108,7 +108,7 @@ export default () => {
 			const decodedMessage = WebsocketMessage.decode(new Uint8Array(data));
 			console.log('message', decodedMessage);
 			switch (decodedMessage.type) {
-				case MessageType.Identify:
+				case MessageType.Connected:
 					heartbeatInterval = setInterval(() => {
 						ws.send(
 							WebsocketMessage.encode(
@@ -117,7 +117,7 @@ export default () => {
 								}),
 							).finish(),
 						);
-					}, decodedMessage.identifyResponse?.heartbeatInterval);
+					}, decodedMessage.connectedResponse?.heartbeatInterval);
 					break;
 				case MessageType.IncomingCall:
 					setCallerName(decodedMessage.incomingCall?.callerName || '');
@@ -217,11 +217,16 @@ export default () => {
 				>
 					Test Use Lifeline
 				</button>
-                <select value={0} onChange={(e) => {setLifeline(Number(e.target.value))}}>
-                    <option value={Lifeline.fiftyFifty}>50/50</option>
-                    <option value={Lifeline.friendCall}>Zadzwoń ;3</option>
-                    <option value={Lifeline.audience}>Te tamte co siedzom</option>
-                </select>
+				<select
+					value={0}
+					onChange={(e) => {
+						setLifeline(Number(e.target.value));
+					}}
+				>
+					<option value={Lifeline.fiftyFifty}>50/50</option>
+					<option value={Lifeline.friendCall}>Zadzwoń ;3</option>
+					<option value={Lifeline.audience}>Te tamte co siedzom</option>
+				</select>
 				<label>
 					<p style={{ color: 'white' }}>Run ID</p>
 					<input
