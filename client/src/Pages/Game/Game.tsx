@@ -105,7 +105,7 @@ export default function Game() {
 									<li>
 										<AnswerButton
 											zIndex={2}
-											disabled={disabledAnswers().includes(answer.id)}
+											disabled={confirmed() == true || disabledAnswers().includes(answer.id)}
 											selected={selectedAnswerId() == answer.id && confirmed() == true}
 											onClick={(_) => {
 												setSelectedAnswerId(answer.id);
