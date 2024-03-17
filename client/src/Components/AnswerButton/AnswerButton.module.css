@@ -11,6 +11,10 @@
 		fill: var(--primary-400);
 	}
 }
+.answerButton:has(.selected):disabled {
+	filter: none;
+	color: inherit;
+}
 
 @keyframes answer {
 	0% {
