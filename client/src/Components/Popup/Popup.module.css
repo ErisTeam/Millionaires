@@ -35,6 +35,7 @@
 		}
 	}
 	&.hide {
+		display: none;
 		animation: hide 0.5s ease-in-out forwards;
 
 		.popup {

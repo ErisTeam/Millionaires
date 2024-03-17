@@ -41,4 +41,9 @@
 	.answering {
 		animation: answer 0.5s infinite 0s alternate;
 	}
+	&:disabled {
+		filter: grayscale(70%);
+		cursor: not-allowed;
+		color: gray;
+	}
 }

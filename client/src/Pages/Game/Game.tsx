@@ -32,6 +32,7 @@ export default function Game() {
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
 	const [confirmed, setConfirmed] = createSignal(false);
+	const [disabledAnswers, setDisabledAnswers] = createSignal<number[]>([]);
 
 	async function answer(answerId: number) {
 		let runId = AppState.runID();
@@ -104,7 +105,7 @@ export default function Game() {
 									<li>
 										<AnswerButton
 											zIndex={2}
-											disabled={confirmed() == true}
+											disabled={disabledAnswers().includes(answer.id)}
 											selected={selectedAnswerId() == answer.id && confirmed() == true}
 											onClick={(_) => {
 												setSelectedAnswerId(answer.id);
@@ -142,14 +143,18 @@ export default function Game() {
 				</div>
 			</main>
 			<ProgressTracker
-				onLifeLineUse={(lifeline) => {
+				onLifeLineUse={(lifeline, res) => {
 					let l: LifeLineType | null = null;
 					switch (lifeline) {
 						case Lifeline.audience:
 							l = 'PublicChoice';
 							break;
 						case Lifeline.fiftyFifty:
-							l = '50/50';
+							console.log('lifeline', lifeline, res);
+							res.FiftyFifty!.Answers.forEach((v) => {
+								setDisabledAnswers((prev) => [...prev, v.id]);
+							});
+							console.log('disabledAnswers', disabledAnswers());
 							break;
 						case Lifeline.friendCall:
 							l = 'FriendCall';
@@ -175,6 +180,7 @@ export default function Game() {
 				<option value="PublicChoice">PublicChoice</option>
 				<option value="FriendCall">FriendCall</option>
 				<option value="FriendCalling">FriendCalling</option>
+				<option value="50/50">50/50</option>
 			</select>
 		</div>
 	);
