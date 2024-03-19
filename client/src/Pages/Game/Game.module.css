@@ -33,19 +33,24 @@
 		z-index: 900;
 		width: 100%;
 		height: 100%;
-		pointer-events: none;
+		/* pointer-events: none; */
 
 		&.publicsChoice {
 			justify-content: end;
 			padding-top: 2em;
 			padding-right: 1.5em;
+			pointer-events: none;
 		}
 		&.friendCall {
-			justify-content: center;
-			align-items: center;
-			backdrop-filter: blur(5px);
+			justify-content: flex-end;
+			align-items: flex-start;
+			/* backdrop-filter: blur(5px); */
 
 			background: var(--overlays-background);
+			padding-top: 1em;
+			padding-right: 1em;
+			height: 60%;
+			/* padding-bottom: 10em; */
 		}
 	}
 

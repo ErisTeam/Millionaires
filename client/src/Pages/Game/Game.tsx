@@ -3,7 +3,7 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Match, Show, Switch, createSignal } from 'solid-js';
+import { For, Match, Show, Switch, createSignal, onCleanup } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { LifeLineType, useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
@@ -15,6 +15,7 @@ import FriendCalling from '@/Components/LifeLines/FriendCalling/FriendCalling';
 import { AudienceResponse, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
 import { EndRunRequest, EndRunResponse } from '@/protobufMessages/Run';
 import { END_RUN_ENDPOINT } from '@/constants';
+import { createStore, produce } from 'solid-js/store';
 
 const AnswerAnimationTimeout = 2000;
 async function finishRun(runId: string) {
@@ -34,7 +35,7 @@ export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
 
-	const [overlay, setOverlay] = createSignal<null | LifeLineType | 'FriendCalling'>(null);
+	const [overlay, setOverlay] = createStore<(LifeLineType | 'FriendCalling')[]>([]);
 	const [LifeLineData, setLifeLineData] = createSignal<FiftyFiftyResponse | AudienceResponse | null>(null);
 
 	//Doesnt need onMount cause it should run before the component is rendered
@@ -100,8 +101,27 @@ export default function Game() {
 	}
 
 	function onCall() {}
+	function onIncomingCall() {
+		setOverlay(
+			produce((prev) => {
+				if (!prev.includes('FriendCalling')) {
+					prev.push('FriendCalling');
+				}
+			}),
+		);
+	}
+	function onCallEnd() {
+		console.log('Call end');
+		setOverlay(
+			produce((prev) => {
+				prev.slice(prev.indexOf('FriendCalling'), 1);
+			}),
+		);
+	}
 
-	AppState.websocket.onCall = onCall;
+	AppState.websocket.onCall.subscribe(onCall);
+	AppState.websocket.onIncomingCall.subscribe(onIncomingCall);
+	AppState.websocket.onEndCall.subscribe(onCallEnd);
 
 	return (
 		<div class={style.container}>
@@ -109,12 +129,14 @@ export default function Game() {
 				<div class={style.ai}>
 					<div class={style.host}>
 						<iframe
+							style={{
+								'pointer-events': 'none',
+							}}
 							width="100%"
 							height="100%"
-							src="https://www.youtube.com/embed/eRXE8Aebp7s?autoplay=1"
+							src="https://www.youtube.com/embed/eRXE8Aebp7s?autoplay=1&controls=0&loop=1"
 							title="10 hour loop playing Subway Surfers"
 							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-							allowfullscreen
 						></iframe>
 					</div>
 				</div>
@@ -145,22 +167,25 @@ export default function Game() {
 					<div
 						class={style.lifeLineContainer}
 						classList={{
-							[style.publicsChoice]: overlay() == 'PublicChoice',
-							[style.friendCall]: overlay() == 'FriendCall' || overlay() == 'FriendCalling',
-							[style.hide]: overlay() == null,
+							[style.publicsChoice]: overlay.includes('PublicChoice'),
+							[style.friendCall]: overlay.includes('FriendCall') || overlay.includes('FriendCalling'),
+							[style.hide]: overlay.length == 0,
 						}}
 					>
-						<Switch>
-							<Match when={overlay() == 'FriendCall'}>
-								<FriendCall />
-							</Match>
-							<Match when={overlay() == 'PublicChoice'}>
-								<PublicChoice />
-							</Match>
-							<Match when={overlay() == 'FriendCalling'}>
-								<FriendCalling name={AppState.websocket.incomingCall()?.callerName} onClick={(res) => {}} />
-							</Match>
-						</Switch>
+						<Show when={overlay.includes('FriendCall')}>
+							<FriendCall />
+						</Show>
+						<Show when={overlay.includes('PublicChoice')}>
+							<PublicChoice />
+						</Show>
+						<Show when={overlay.includes('FriendCalling')}>
+							<FriendCalling
+								name={AppState.websocket.currentCall.callerName}
+								onClick={() => {
+									setOverlay(produce((prev) => prev.splice(prev.indexOf('FriendCalling'), 1)));
+								}}
+							/>
+						</Show>
 					</div>
 				</div>
 			</main>
@@ -173,23 +198,31 @@ export default function Game() {
 							break;
 						case Lifeline.fiftyFifty:
 							console.log('lifeline', lifeline, res);
-							res.FiftyFifty!.Answers.forEach((v) => {
+							res.fiftyFifty!.answers.forEach((v) => {
 								setDisabledAnswers((prev) => [...prev, v.id]);
 							});
 							console.log('disabledAnswers', disabledAnswers());
 							break;
 						case Lifeline.friendCall:
 							l = 'FriendCall';
+
 							break;
 					}
 					if (!l) {
 						return;
 					}
-					setOverlay(l);
+					setOverlay(
+						produce((prev) => {
+							if (prev.includes(l as LifeLineType)) {
+								return;
+							}
+							prev.push(l as LifeLineType);
+						}),
+					);
 				}}
 			/>
-			<select
-				value={overlay() || 'none'}
+			{/* <select
+				// value={overlay. || 'none'}
 				onchange={(e) => {
 					if (e.currentTarget.value == 'null') {
 						setOverlay(null);
@@ -203,7 +236,7 @@ export default function Game() {
 				<option value="FriendCall">FriendCall</option>
 				<option value="FriendCalling">FriendCalling</option>
 				<option value="50/50">50/50</option>
-			</select>
+			</select> */}
 		</div>
 	);
 }

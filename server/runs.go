@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var noMoreTriesError = errors.New("Player has no more tries left")
+var errNoMoreTriesError = errors.New("player has no more tries left")
 
 const DEFAULT_TRIES_LEFT = 3
 
@@ -95,7 +95,7 @@ func createRun(ctx *fiber.Ctx, playerId Snowflake) (*Snowflake, error) {
 
 	if triesLeft <= 0 {
 		logger.Printf("Player with id `%d` has no more tries left, abandoning run creation.", playerId.RawSnowflake)
-		return nil, noMoreTriesError
+		return nil, errNoMoreTriesError
 	}
 
 	runId := newSnowflake(SF_RUN)
@@ -161,7 +161,7 @@ func startRunRoute(ctx *fiber.Ctx) error {
 
 	// Player has no tries left
 	// TODO: Send an appropariate response
-	if runId == nil && errors.Is(err, noMoreTriesError) {
+	if runId == nil && errors.Is(err, errNoMoreTriesError) {
 		return nil
 	}
 
