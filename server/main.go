@@ -16,6 +16,8 @@ import (
 
 //go:generate protoc --go_out=./ ../proto/*.proto  --proto_path=../proto/
 
+func routeFmt(pref string, str string) string { return fmt.Sprintf("`%s` --- %s", pref, str) }
+
 var loggerInfo = log.New(os.Stdout, "[INFO]: ", log.Ldate|log.Ltime)
 var loggerWarn = log.New(os.Stdout, "[\033[33mWARNING\033[0m]: ", log.Ldate|log.Ltime)
 var loggerError = log.New(os.Stdout, "[\033[31mERROR\033[0m]: ", log.Ldate|log.Ltime)
@@ -85,14 +87,14 @@ func main() {
 	app.Post("/startRun", startRunRoute)
 	app.Get("/getRuns", getRunsRoute)
 	app.Post("/endRun", endRunRoute)
-	app.Post("/useLifeline", useLifeline)
+	app.Post("/useLifeline", useLifelineRoute)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to millionaires!")
 	})
 
 	// Gets a random question of a specified difficulty
-	app.Post("/answerQuestion", answerQuestion)
+	app.Post("/answerQuestion", answerQuestionRoute)
 
 	app.Get("/ws/", websocket.New(WebsocketRun))
 

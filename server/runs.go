@@ -16,6 +16,8 @@ var ERROR_NO_MORE_TRIES = errors.New("Player has no more tries left")
 var ERROR_NAME_EMPTY = errors.New("Name can't be empty.")
 var ERROR_NAME_TOO_SHORT = errors.New("Name can't be less than 3 characters wide.")
 var ERROR_NAME_TOO_LONG = errors.New("Name can't be more than 255 characters wide.")
+var ERROR_ENDRUN_UPDATE = errors.New("Unable to update `ended` status of a run.")
+var ERROR_ENDRUN_AFFECTED = errors.New("Unable to check whether `ended` status of a run was affected.")
 
 const DEFAULT_TRIES_LEFT = 3
 
@@ -113,9 +115,6 @@ func createRun(ctx *fiber.Ctx, playerId Snowflake) (*Snowflake, error) {
 	return &runId, nil
 }
 
-var ERROR_ENDRUN_UPDATE = errors.New("Unable to update `ended` status of a run.")
-var ERROR_ENDRUN_AFFECTED = errors.New("Unable to check whether `ended` status of a run was affected.")
-
 // Updates the run in the database and returns whether it was actually updated (it might have already been ended before).
 func endRun(ctx *fiber.Ctx, runId Snowflake) (bool, error) {
 	var db = ctx.Locals("db").(*sql.DB)
@@ -143,17 +142,16 @@ func endRun(ctx *fiber.Ctx, runId Snowflake) (bool, error) {
 	return (affected > 0), nil
 }
 
-func startRunRouteFmt(str string) string { return fmt.Sprintf("`startRun` --- %s", str) }
 func startRunRoute(ctx *fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/vnd.google.protobuf")
 
 	// Parse request body
 	var request = &protobufMessages.StartRunRequest{}
 	if err := proto.Unmarshal(ctx.Body(), request); err != nil {
-        return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err.Error())), fiber.ErrInternalServerError.Code)
+        return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err.Error())), fiber.ErrInternalServerError.Code)
 	}
 
-    loggerInfo.Print(startRunRouteFmt(fmt.Sprint("Visited with the following data { ", request, " }")))
+    loggerInfo.Print(routeFmt("startRun", fmt.Sprint("Visited with the following data { ", request, " }")))
 
     // Handle `request.Name`
     nameLen := len(request.Name)
@@ -166,18 +164,18 @@ func startRunRoute(ctx *fiber.Ctx) error {
     }
 
     if err != nil {
-        return c_error(ctx, startRunRouteFmt(err.Error()), fiber.ErrBadRequest.Code)
+        return c_error(ctx, routeFmt("startRun", err.Error()), fiber.ErrBadRequest.Code)
     }
 
 	playerExist, playerId, err := doesPlayerExist(ctx, request.Name)
 	if err != nil {
-		return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to check if a player with name `%s` exists. Reason: `%s`", request.Name, err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to check if a player with name `%s` exists. Reason: `%s`", request.Name, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	if !playerExist {
 		playerId, err = createPlayer(ctx, request.Name)
 		if err != nil {
-			return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to create a new player with the name `%s`. Reason: `%s`", request.Name, err)), fiber.ErrInternalServerError.Code)
+			return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to create a new player with the name `%s`. Reason: `%s`", request.Name, err)), fiber.ErrInternalServerError.Code)
 		}
 	}
 
@@ -185,21 +183,21 @@ func startRunRoute(ctx *fiber.Ctx) error {
 
 	// Player has no tries left
 	if errors.Is(err, ERROR_NO_MORE_TRIES) {
-        return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Player with ID `%d` has no more tries left.", playerId.RawSnowflake)), fiber.ErrBadRequest.Code)
+        return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Player with ID `%d` has no more tries left.", playerId.RawSnowflake)), fiber.ErrBadRequest.Code)
 	}
 
 	if err != nil {
-		return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to start a new run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to start a new run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	question, err := getRandomQuestion(ctx, *runId, 0)
 	if err != nil {
-		return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to get the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to get the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	err = assignQuestionToRun(ctx, *runId, snowflakeFromInt(int64(question.Question.Id)))
 	if err != nil {
-		return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to assign the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to assign the first question for a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	var response = protobufMessages.StartRunResponse{}
@@ -207,23 +205,22 @@ func startRunRoute(ctx *fiber.Ctx) error {
 	response.Question = question
 	out, err := proto.Marshal(&response)
 	if err != nil {
-        return c_error(ctx, startRunRouteFmt(fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
+        return c_error(ctx, routeFmt("startRun", fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
-	loggerInfo.Println(startRunRouteFmt(fmt.Sprintf("Succesfully started a run with id `%d` for a user with id `%d`.", runId.RawSnowflake, playerId.RawSnowflake)))
+	loggerInfo.Println(routeFmt("startRun", fmt.Sprintf("Succesfully started a run with id `%d` for a user with id `%d`.", runId.RawSnowflake, playerId.RawSnowflake)))
 	return ctx.Status(http.StatusOK).Send(out)
 }
 
-func getRunsRouteFmt(str string) string { return fmt.Sprintf("`getRuns` --- %s", str) }
 func getRunsRoute(ctx *fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/vnd.google.protobuf")
 	var db = ctx.Locals("db").(*sql.DB)
 
-	loggerInfo.Println(getRunsRouteFmt("Visited."))
+	loggerInfo.Println(routeFmt("getRuns", "Visited."))
 
 	run_rows, err := db.Query("SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);")
 	if err != nil {
-		return c_error(ctx, getRunsRouteFmt(fmt.Sprintf("Unable to get runs. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("getRuns", fmt.Sprintf("Unable to get runs. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
 	var response = protobufMessages.GetRunsResponse{}
@@ -242,33 +239,34 @@ func getRunsRoute(ctx *fiber.Ctx) error {
 
 	out, err := proto.Marshal(&response)
 	if err != nil {
-		return c_error(ctx, getRunsRouteFmt(fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("getRuns", fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
-	loggerInfo.Println(startRunRouteFmt("Successfuly got runs."))
+	loggerInfo.Println(routeFmt("startRun", "Successfuly got runs."))
 	return ctx.Status(http.StatusOK).Send(out)
 }
 
-func endRunRouteFmt(str string) string { return fmt.Sprintf("`endRun` --- %s", str) }
 func endRunRoute(ctx *fiber.Ctx) error {
 	ctx.Set("Content-Type", "application/vnd.google.protobuf")
 
 	var request = &protobufMessages.EndRunRequest{}
 
 	if err := proto.Unmarshal(ctx.Body(), request); err != nil {
-        return c_error(ctx, endRunRouteFmt(fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err.Error())), fiber.ErrInternalServerError.Code)
+        return c_error(ctx, routeFmt("endRun", fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err.Error())), fiber.ErrInternalServerError.Code)
 	}
+
+    loggerInfo.Print(routeFmt("endRun", fmt.Sprint("Visited with the following data { ", request, " }")))
 
 	// Parse run id
 	runIdAsInt, err := strconv.Atoi(request.RunId)
 	if err != nil {
-        return c_error(ctx, endRunRouteFmt(fmt.Sprintf("Unable to parse RunId `%s`. Reason: `%s`", request.RunId, err)), fiber.ErrInternalServerError.Code)
+        return c_error(ctx, routeFmt("endRun", fmt.Sprintf("Unable to parse RunId `%s`. Reason: `%s`", request.RunId, err)), fiber.ErrInternalServerError.Code)
 	}
 	runId := snowflakeFromInt(int64(runIdAsInt))
 
 	affected, err := endRun(ctx, runId)
 	if err != nil {
-        return c_error(ctx, endRunRouteFmt(fmt.Sprintf("Unable to end run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
+        return c_error(ctx, routeFmt("endRun", fmt.Sprintf("Unable to end run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	var response protobufMessages.EndRunResponse
@@ -276,9 +274,9 @@ func endRunRoute(ctx *fiber.Ctx) error {
 
 	out, err := proto.Marshal(&response)
 	if err != nil {
-		c_error(ctx, endRunRouteFmt(fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
+		c_error(ctx, routeFmt("endRun", fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
-	loggerInfo.Println(endRunRouteFmt(fmt.Sprintf("Succesfully ended a run with id `%d`.", runId.RawSnowflake)))
+	loggerInfo.Println(routeFmt("endRun", fmt.Sprintf("Succesfully ended a run with id `%d`.", runId.RawSnowflake)))
 	return ctx.Status(http.StatusOK).Send(out)
 }

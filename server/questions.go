@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"millionairesServer/protobufMessages"
 	"net/http"
 	"strconv"
@@ -44,21 +43,23 @@ func getRandomQuestion(c *fiber.Ctx, runId Snowflake, difficulty int) (*protobuf
 
     // Fallback if the player has seen all questions, could be done with a query but who cares
     if err == sql.ErrNoRows {
-        loggerInfo.Printf("Player of a run with id `%d` has seen all questions of difficulty `%d`.", runId.RawSnowflake, difficulty)
+        loggerInfo.Printf("Player of a run with ID `%d` has seen all questions of difficulty `%d`. Fetching a question not present in the current run.", runId.RawSnowflake, difficulty)
         randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq WHERE rq.run_id = ?) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
         err = randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
 
         if err == sql.ErrNoRows {
-            loggerInfo.Printf("No question could be found with a difficulty of `%d`.", difficulty)
+            loggerWarn.Printf("No question could be found with a difficulty of `%d`.", difficulty)
         }
     }
 
 	if err != nil {
+        loggerWarn.Printf("Unable to fetch a random question of difficulty `%d` for a run with ID `%d`.", difficulty, runId.RawSnowflake)
 		return nil, err
 	}
 
 	answerRows, err := db.Query("SELECT answers.id, answers.answer FROM answers JOIN questions ON answers.question_id = questions.id WHERE questions.id = ?;", randomQuestion.Id)
 	if err != nil {
+        loggerWarn.Printf("Unable to fetch answers for a question with ID `%d`.", randomQuestion.Id)
 		return nil, err
 	}
 	defer answerRows.Close()
@@ -75,6 +76,7 @@ func getRandomQuestion(c *fiber.Ctx, runId Snowflake, difficulty int) (*protobuf
 	answerRows.Close()
 
 	output := NewQuestionResponse(&randomQuestion, answers)
+	loggerInfo.Printf("Successfully fetched a random question for a run with ID `%d`. (`%d`)", randomQuestion.Id, runId.RawSnowflake)
 	return &output, nil
 }
 
@@ -83,12 +85,20 @@ func getRandomQuestion(c *fiber.Ctx, runId Snowflake, difficulty int) (*protobuf
 func assignQuestionToRun(ctx *fiber.Ctx, runId Snowflake, questionId Snowflake) error {
 	var db = ctx.Locals("db").(*sql.DB)
 
+    loggerInfo.Printf("Assigning a question of ID `%d` to a run with ID `%d`.", questionId.RawSnowflake, runId.RawSnowflake)
+
 	_, err := db.Exec("INSERT INTO run_questions (id, run_id, question_id, answer_id, answered_at, question_num) VALUES (NULL, ?, ?, NULL, NULL, (SELECT COALESCE((SELECT run_questions.question_num FROM run_questions JOIN runs ON runs.snowflake_id = run_questions.run_id WHERE runs.snowflake_id = ? ORDER BY run_questions.question_num DESC LIMIT 1)+1, 0)));", runId.RawSnowflake, questionId.RawSnowflake, runId.RawSnowflake)
 
-	return err
+    if err != nil {
+        loggerWarn.Printf("Unable to assing a question of ID `%d` to a run with ID `%d`. Reason: `%s`", questionId.RawSnowflake, runId.RawSnowflake, err)
+        return err
+    }
+
+    loggerInfo.Printf("Successfully assigned a question of ID `%d` to a run with ID `%d`.", questionId.RawSnowflake, runId.RawSnowflake)
+	return nil
 }
 
-func answerQuestion(c *fiber.Ctx) error {
+func answerQuestionRoute(c *fiber.Ctx) error {
 	db := c.Locals("db").(*sql.DB)
 
 	// Get the time of the request
@@ -98,13 +108,15 @@ func answerQuestion(c *fiber.Ctx) error {
 	request := protobufMessages.AnswerQuestionRequest{}
 	err := proto.Unmarshal(c.Body(), &request)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while parsing request body: `%s`", err), fiber.ErrBadRequest.Code)
+		return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
+
+    loggerInfo.Print(routeFmt("answerQuestion", fmt.Sprint("Visited with the following data { ", &request, " }")))
 
 	// Parse run id
 	runIdAsInt, err := strconv.Atoi(request.RunId)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while parsing run_id: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to parse runId `%s`. Reason: `%s`", request.RunId, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	runId := snowflakeFromInt(int64(runIdAsInt))
@@ -118,15 +130,15 @@ func answerQuestion(c *fiber.Ctx) error {
 	var runQuestionNum int
 	err = runQuestionRow.Scan(&runQuestionId, &runQuestionQuestionId, &runQuestionAnswerId, &runQuestionAnsweredAt, &runQuestionNum)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while getting current run_question info: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to get the current run question for a run with ID `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	// Check if the question is not already answered
 	if runQuestionAnswerId.Valid || runQuestionAnsweredAt.Valid {
-		return c_error(c, "The last asked question was already answered", fiber.ErrBadRequest.Code)
+		return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Run question with ID `%d` was already answered.", runQuestionId)), fiber.ErrInternalServerError.Code)
 	}
 
-    loggerInfo.Printf("Player of run with id `%d` answered the question with id `%d` with an answer of id `%d`", runId.RawSnowflake, runQuestionQuestionId, request.AnswerId)
+    loggerInfo.Printf(routeFmt("answerQuestion", fmt.Sprintf("Player of a run with id `%d` answered the question with ID `%d` with an answer of ID `%d`.", runId.RawSnowflake, runQuestionQuestionId, request.AnswerId)))
 
 	// Check if the answer is relevant to the question and is correct
 	answerCorrectnesRow := db.QueryRow("SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ?), FALSE) AS is_answer_relevant, COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ? AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;", request.AnswerId, runQuestionQuestionId, request.AnswerId, runQuestionQuestionId)
@@ -135,34 +147,33 @@ func answerQuestion(c *fiber.Ctx) error {
 	var isAnswerCorrect bool
 	err = answerCorrectnesRow.Scan(&isAnswerRelevant, &isAnswerCorrect)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while checking the givens' answer correctnes. Reason: `%s`", err), fiber.ErrInternalServerError.Code)
+        return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to check whether the answer was correct or relevant to the question. (runId: `%d`, questionId: `%d`, playerAnswerId: `%d`)", runId.RawSnowflake, runQuestionId, request.AnswerId)), fiber.ErrInternalServerError.Code)
 	}
 
 	// An answer to a totally different question
-	// TODO: Handle
 	if !isAnswerRelevant {
-		return c_error(c, fmt.Sprintf("Given answer (of id `%d`) is for a different question.", request.AnswerId), fiber.ErrInternalServerError.Code)
+        return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Answer of ID `%d` made in a run with ID `%d` is irrelevant to a question of ID `%d`.", request.AnswerId, runId.RawSnowflake, runQuestionId)), fiber.ErrBadRequest.Code)
 	}
 
 	// Update the answer of the `run_questions` table
 	_, err = db.Exec("UPDATE run_questions SET answer_id = ?, answered_at = ? WHERE run_questions.id = ?;", request.AnswerId, requestTime, runQuestionId)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while updating current run_question: `%s`", err), fiber.ErrInternalServerError.Code)
+        return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to update the answer for a run question with ID `%d`.", runQuestionId)), fiber.ErrInternalServerError.Code)
 	}
 
 	// Increment the answers `chosen` count
 	update, err := db.Exec("UPDATE answers SET chosen = ((SELECT answers.chosen FROM answers WHERE id = ?)+1) WHERE id = ?", request.AnswerId, request.AnswerId)
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while incrementing analytics: `%s`", err), fiber.ErrInternalServerError.Code)
+        return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to increment the chosen answer count with ID `%d`. Reason: `%s`", request.AnswerId, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	affected, err := update.RowsAffected()
 	if err != nil {
-		return c_error(c, fmt.Sprintf("Error while getting affected rows: `%s`", err), fiber.ErrInternalServerError.Code)
+        loggerWarn.Print(routeFmt("answerQuestion", fmt.Sprintf("Unable to check if the row of the chosen answer count with ID `%d` was affected.", request.AnswerId)))
 	}
 
 	if affected == 0 {
-		return c_error(c, "Error while updating analytics: `No rows affected`", fiber.ErrInternalServerError.Code)
+        return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to increment the chosen answer count with ID `%d`. (At least that's what the affected rows count says)", request.AnswerId)), fiber.ErrInternalServerError.Code)
 	}
 
 	response := protobufMessages.AnswerQuestionResponse{IsCorrect: isAnswerCorrect}
@@ -172,19 +183,19 @@ func answerQuestion(c *fiber.Ctx) error {
 		if runQuestionNum+1 < 12 {
 			question, err := getRandomQuestion(c, runId, difficultyScaling(runQuestionNum+1))
 			if err != nil {
-				return c_error(c, fmt.Sprintf("Error while getting a random question: `%s`", err), fiber.ErrInternalServerError.Code)
+                return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to fetch the next question for a run with ID `%d`. Reason: `%s`.", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 			}
 
 			err = assignQuestionToRun(c, runId, snowflakeFromInt(int64(question.Question.Id)))
 			if err != nil {
-				return c_error(c, fmt.Sprintf("Unable to assign the question to the run with id `%d`: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+                return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to assign the question to a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 			}
 
 			response.NextQuestion = question
 		} else {
 			_, err = db.Exec("UPDATE runs SET ended = true WHERE runs.snowflake_id = ?;", runId.RawSnowflake)
 			if err != nil {
-				return c_error(c, fmt.Sprintf("Error while ending a run with id `%d`. Reason `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+                return c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to end a run with id `%d`. Reason `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 			}
 		}
 	}
@@ -195,8 +206,9 @@ func answerQuestion(c *fiber.Ctx) error {
 
 	proto_out, err := proto.Marshal(&response)
 	if err != nil {
-		log.Fatalln(err)
+		c_error(c, routeFmt("answerQuestion", fmt.Sprintf("Unable to encode response as bytes. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
+    loggerInfo.Print(routeFmt("answerQuestion", fmt.Sprintf("Answering a question of ID `%d` with an answer of ID `%d` in a run with ID `%d` was successfull.", runQuestionQuestionId, request.AnswerId, runId.RawSnowflake)))
 	return c.Status(http.StatusOK).Send(proto_out)
 }

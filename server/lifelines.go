@@ -54,19 +54,21 @@ func lifelineAsString(lifeline Lifeline) string {
 	return "UNKNOWN"
 }
 
-func useLifeline(ctx *fiber.Ctx) error {
+func useLifelineRoute(ctx *fiber.Ctx) error {
 	request := protobufMessages.UseLifelineRequest{}
 	err := proto.Unmarshal(ctx.Body(), &request)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while parsing request body of a lifeline request. Reason: `%s`", err), fiber.ErrBadRequest.Code)
+		return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
+
+    loggerInfo.Print(routeFmt("useLifeline", fmt.Sprint("Visited with the following data { ", &request, " }")))
 
 	var db = ctx.Locals("db").(*sql.DB)
 
 	// Parse run id
 	runIdAsInt, err := strconv.Atoi(request.RunSnowflakeId)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while parsing run_id: `%s`", err), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to parse runId `%s`. Reason: `%s`", request.RunSnowflakeId, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	runId := snowflakeFromInt(int64(runIdAsInt))
@@ -76,17 +78,15 @@ func useLifeline(ctx *fiber.Ctx) error {
 
 	err = lifelinesStatusRow.Scan(&lifelinesStatus)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while getting used lifelines of a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to get used lifelines of a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
 
 	var runQuestionIdInt int
 	runQuestionIdRow := db.QueryRow("SELECT run_questions.id FROM run_questions WHERE run_questions.run_id = ? ORDER BY run_questions.question_num DESC LIMIT 1;", runId.RawSnowflake)
 	err = runQuestionIdRow.Scan(&runQuestionIdInt)
 	if err != nil {
-		return c_error(ctx, fmt.Sprintf("Error while getting current run question id of a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
+		return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to get current run question ID of a run with ID `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 	}
-
-	loggerInfo.Printf("Using a lifeline for a run with id `%d`", runId.RawSnowflake)
 
 	response := protobufMessages.UseLifelineResponse{}
 	lifeline := LlUnknown
@@ -96,14 +96,13 @@ func useLifeline(ctx *fiber.Ctx) error {
 	case protobufMessages.Lifeline_fiftyFifty:
 		{
 			lifeline = LlFiftyFifty
-			loggerInfo.Printf("status is %d %d", lifelinesStatus, int(lifeline))
 			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
 			discarded_answers := []*protobufMessages.Answer{}
 
 			if !wasLifelineUsed {
 				discarded_answers_sql, err := db.Query("SELECT answers.id FROM answers WHERE answers.question_id = (SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = ? AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) AND answers.is_correct = FALSE ORDER BY RANDOM() LIMIT 2;", runId.RawSnowflake)
 				if err != nil {
-					c_error(ctx, fmt.Sprintf("Unable to complete 50/50: `%s`", err), fiber.ErrInternalServerError.Code)
+                    return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to get current run question ID of a run with ID `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 				}
 				defer discarded_answers_sql.Close()
 
