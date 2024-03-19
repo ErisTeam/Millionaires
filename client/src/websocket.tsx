@@ -102,13 +102,14 @@ export async function connect(indentify?: boolean) {
 					appState.websocket.setCurrentCall(produce((prev) => (prev.acceped = true)));
 
 					appState.websocket.onCallResponse.emit(true);
-					appState.websocket.setCurrentCall(produce((prev)=>{
-						prev.acceped = true;
-					}))
+					appState.websocket.setCurrentCall(
+						produce((prev) => {
+							prev.acceped = true;
+						}),
+					);
 				} else {
 					// setInCall(false);
 					appState.websocket.onCallResponse.emit(false);
-					
 				}
 				break;
 		}
@@ -166,6 +167,4 @@ export function acceptCall() {
 		accepted: true,
 	};
 	ws.send(WebsocketMessage.encode(m).finish());
-
-	appState.websocket.onCall.
 }
