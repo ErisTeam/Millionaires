@@ -8,6 +8,7 @@ type AnswerButtonProps = {
 	onClick: (answer: Answer) => void;
 	answer: Answer;
 	selected?: boolean;
+	correct?: boolean;
 	disabled?: boolean;
 	zIndex?: number;
 };
@@ -17,7 +18,7 @@ export default (props: AnswerButtonProps) => {
 			zIndex={props.zIndex}
 			disabled={props.disabled}
 			class={style.answerButton}
-			hexagonClass={style.hexagon + ' ' + (props.selected && style.selected)}
+			hexagonClass={style.hexagon + ' ' + (props.selected && style.selected) + ' ' + (props.correct && style.correct)}
 			onClick={() => {
 				props.onClick(props.answer);
 			}}

@@ -6,8 +6,9 @@
 	gap: 0.5em;
 	padding-top: 0.25em;
 	padding-bottom: 0.25em;
+	width: fit-content;
 
-	width: 20em;
+	min-width: 20em;
 	height: 7em;
 
 	min-height: 7em;

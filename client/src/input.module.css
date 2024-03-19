@@ -1,0 +1,18 @@
+.input {
+	display: inline-block;
+	box-sizing: border-box;
+	margin: 8px 0;
+	outline: none;
+	border: 3px solid var(--secondary-500);
+	border-radius: 10px;
+	background-color: var(--primary-800);
+	padding: 12px 20px;
+	width: 100%;
+	max-width: fit-content;
+	font-size: 1.5rem;
+	text-align: center;
+	/* placeholder color */
+	&::placeholder {
+		color: var(--secondary-300);
+	}
+}

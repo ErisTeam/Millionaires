@@ -7,7 +7,7 @@ import { useNavigate } from '@solidjs/router';
 export default function GameOver() {
 	const AppState = useAppState();
 	const navigate = useNavigate();
-	const [didComplete, setDidComplete] = createResource(() => {
+	const [didComplete] = createResource(() => {
 		if (AppState.questionsStatus()[11].answered) {
 			return true;
 		}
@@ -17,7 +17,7 @@ export default function GameOver() {
 		<div class={style.GameOver}>
 			<h3 classList={{ [style.success]: didComplete() }}>Koniec Gry</h3>
 			<span>Gratulujemy {AppState.username()},</span>
-			<span> osiągnąłeś wynik:</span>
+			<span>Twój wynik to: {NaN}</span>
 			<HexagonButton
 				class={style.menuButton}
 				hexagonClass={style.hexagon}

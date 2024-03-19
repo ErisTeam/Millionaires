@@ -1,9 +1,10 @@
 .answerButton {
-	.marker {
-	}
-
 	.selected {
 		animation: answer 500ms infinite step-end;
+	}
+
+	.correct {
+		--blink-color: green;
 	}
 }
 .answerButton:not(:disabled):hover {
@@ -18,12 +19,12 @@
 
 @keyframes answer {
 	0% {
-		fill: orangered;
+		fill: var(--blink-color, orangered);
 	}
 	50% {
 		fill: var(--primary-800);
 	}
 	100% {
-		fill: orangered;
+		fill: var(--blink-color, orangered);
 	}
 }

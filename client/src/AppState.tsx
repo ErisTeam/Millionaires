@@ -128,6 +128,7 @@ const ContextValue = {
 			ws()?.close(200, 'no');
 		}
 		setRunID(undefined);
+		setUsername(undefined);
 	},
 };
 const AppState = createContext(ContextValue);

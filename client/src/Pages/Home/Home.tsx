@@ -8,12 +8,14 @@ import { useAppState } from '@/AppState';
 import { startRun } from '@/helpers';
 import Popup from '@/Components/Popup/Popup';
 import { connect, identify } from '@/websocket';
+import inputs from 'input.module.css';
 
 export default function StartPage() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
 
 	const [showPopup, setShowPopup] = createSignal(false);
+	const [popupText, setPopupText] = createSignal('');
 
 	onMount(() => {
 		AppState.resetState();
@@ -24,8 +26,9 @@ export default function StartPage() {
 		e.preventDefault();
 		//We arent using the appstate directly because you cant narrow a type from a signal because each function call can possibly return a different value
 		const username = AppState.username();
-		if (username == undefined) {
+		if (username == '' || username == undefined) {
 			setShowPopup(true);
+			setPopupText('Podaj imie i nazwisko');
 			return;
 		}
 		startRun(username)
@@ -50,7 +53,8 @@ export default function StartPage() {
 			})
 			.catch((e) => {
 				console.error(e);
-				alert('Nie mozna polaczyc z serwerem');
+				setShowPopup(true);
+				setPopupText('Nie mozna polaczyc z serwerem');
 			});
 	}
 
@@ -62,6 +66,7 @@ export default function StartPage() {
 					<div class={style.logo}></div>
 					<li>
 						<input
+							class={inputs.input}
 							type="text"
 							placeholder="Imie i Nazwisko"
 							oninput={(e) => {
@@ -78,7 +83,7 @@ export default function StartPage() {
 			</LeaderboardStateProvider>
 
 			<Popup hide={!showPopup()}>
-				<h2>Podaj imie i nazwisko!</h2>
+				<h2>{popupText()}</h2>
 				<HexagonButton
 					class={style.popupButton}
 					hexagonClass={style.hexagon}

@@ -127,15 +127,15 @@ func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) erro
 	println("recv: ", "StartCall")
 	var currentClient, succes = clientManager.clients[currentId]
 	if !succes {
-		return errors.New("no client found")
+		return errors.New("client not found")
 	}
 	var conn = currentClient.connection
 	if conn == nil {
-		return errors.New("no client found")
+		return errors.New("client not found")
 	}
 
 	if currentClient == nil {
-		return errors.New("no client found")
+		return errors.New("client not found")
 	}
 	msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Error}
 	if currentClient.inCall {
@@ -198,6 +198,7 @@ func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) erro
 			println("db: ", err.Error())
 			return err
 		}
+		println("name: ", name, " snowflakeid: ", snowflakeId)
 		if snowflakeId == currentId.StringIDDec() {
 			callerName = name
 		} else {
@@ -234,6 +235,9 @@ func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) erro
 			targetState.resetCall()
 
 			msg := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_EndCall}
+
+			println("no response from callee")
+
 			response, err := proto.Marshal(msg)
 			if err != nil {
 				println("proto: ", err.Error())

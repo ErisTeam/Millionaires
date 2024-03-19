@@ -102,9 +102,13 @@ export async function connect(indentify?: boolean) {
 					appState.websocket.setCurrentCall(produce((prev) => (prev.acceped = true)));
 
 					appState.websocket.onCallResponse.emit(true);
+					appState.websocket.setCurrentCall(produce((prev)=>{
+						prev.acceped = true;
+					}))
 				} else {
 					// setInCall(false);
 					appState.websocket.onCallResponse.emit(false);
+					
 				}
 				break;
 		}
@@ -146,4 +150,22 @@ export function sendMessage(message: string) {
 		authorName: '??',
 	};
 	ws.send(WebsocketMessage.encode(m).finish());
+}
+export function acceptCall() {
+	const appState = useAppState();
+
+	if (!ws) {
+		throw 'ws is undefined';
+	}
+	if (!appState.websocket.currentCall.callerName) {
+		throw 'not in call';
+	}
+	const m = WebsocketMessage.create();
+	m.type = MessageType.CallResponse;
+	m.callResponse = {
+		accepted: true,
+	};
+	ws.send(WebsocketMessage.encode(m).finish());
+
+	appState.websocket.onCall.
 }

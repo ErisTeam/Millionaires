@@ -36,7 +36,6 @@ export default function Game() {
 	const AppState = useAppState();
 
 	const [overlay, setOverlay] = createStore<(LifeLineType | 'FriendCalling')[]>([]);
-	const [LifeLineData, setLifeLineData] = createSignal<FiftyFiftyResponse | AudienceResponse | null>(null);
 
 	//Doesnt need onMount cause it should run before the component is rendered
 	//shouldShow prevents an error on ?.question
@@ -46,6 +45,7 @@ export default function Game() {
 	}
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
+	const [correctAnswerAnimation, setCorrectAnswerAnimation] = createSignal<boolean>(false);
 	const [confirmed, setConfirmed] = createSignal(false);
 	const [disabledAnswers, setDisabledAnswers] = createSignal<number[]>([]);
 	const [audienceVotes, setAudienceVotes] = createSignal<AudienceResponseItem[]>([]);
@@ -63,6 +63,8 @@ export default function Game() {
 		if (result) {
 			setConfirmed(true);
 			console.log(selectedAnswerId());
+
+			setOverlay([]);
 
 			let promise = answer(selectedAnswerId() as number);
 			if (promise == undefined) return;
@@ -87,15 +89,21 @@ export default function Game() {
 						navigate('/results');
 						return;
 					}
-					AppState.setCurrentQuestion(result!.nextQuestion);
+					setCorrectAnswerAnimation(true);
+					setTimeout(() => {
+						AppState.setCurrentQuestion(result!.nextQuestion);
+						setSelectedAnswerId(undefined);
+						setConfirmed(false);
+						setCorrectAnswerAnimation(false);
+					}, AnswerAnimationTimeout / 2);
 				} else {
 					alert('Zle');
 					navigate('/results');
+					setSelectedAnswerId(undefined);
+					setConfirmed(false);
+					setCorrectAnswerAnimation(false);
 				}
-
-				setSelectedAnswerId(undefined);
-				setConfirmed(false);
-			}, AnswerAnimationTimeout);
+			}, AnswerAnimationTimeout / 2);
 		} else {
 			setSelectedAnswerId(undefined);
 		}
@@ -116,6 +124,7 @@ export default function Game() {
 		setOverlay(
 			produce((prev) => {
 				prev.slice(prev.indexOf('FriendCalling'), 1);
+				prev.slice(prev.indexOf('FriendCall'), 1);
 			}),
 		);
 	}
@@ -123,6 +132,17 @@ export default function Game() {
 	AppState.websocket.onCall.subscribe(onCall);
 	AppState.websocket.onIncomingCall.subscribe(onIncomingCall);
 	AppState.websocket.onEndCall.subscribe(onCallEnd);
+	AppState.websocket.onCallResponse.subscribe((data) => {
+		setOverlay(
+			produce((prev) => {
+				prev.slice(prev.indexOf('FriendCalling'), 1);
+
+				if (!prev.includes('FriendCall') && data) {
+					prev.push('FriendCall');
+				}
+			}),
+		);
+	});
 
 	return (
 		<div class={style.container}>
@@ -152,6 +172,7 @@ export default function Game() {
 											zIndex={2}
 											disabled={confirmed() == true || disabledAnswers().includes(answer.id)}
 											selected={selectedAnswerId() == answer.id && confirmed() == true}
+											correct={correctAnswerAnimation()}
 											onClick={(_) => {
 												setSelectedAnswerId(answer.id);
 											}}
@@ -169,7 +190,8 @@ export default function Game() {
 						class={style.lifeLineContainer}
 						classList={{
 							[style.publicsChoice]: overlay.includes('PublicChoice'),
-							[style.friendCall]: overlay.includes('FriendCall') || overlay.includes('FriendCalling'),
+							[style.friendCall]: overlay.includes('FriendCall'),
+							[style.friendCalling]: overlay.includes('FriendCalling'),
 							[style.hide]: overlay.length == 0,
 						}}
 					>
@@ -183,7 +205,14 @@ export default function Game() {
 							<FriendCalling
 								name={AppState.websocket.currentCall.callerName}
 								onClick={() => {
-									setOverlay(produce((prev) => prev.splice(prev.indexOf('FriendCalling'), 1)));
+									setOverlay(
+										produce((prev) => {
+											prev.splice(prev.indexOf('FriendCalling'), 1);
+											if (!prev.includes('FriendCall')) {
+												prev.push('FriendCall');
+											}
+										}),
+									);
 								}}
 							/>
 						</Show>

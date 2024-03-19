@@ -16,12 +16,21 @@ export default (props: FriendCallingProps) => {
 				<HexagonButton
 					class={style.button}
 					onClick={() => {
-						appState.websocket;
+						appState.websocket.acceptCall();
+						props.onClick();
 					}}
 				>
 					Akceptuj
 				</HexagonButton>
-				<HexagonButton class={style.button}>Odrzuć</HexagonButton>
+				<HexagonButton
+					class={style.button}
+					onClick={() => {
+						appState.websocket.rejectCall();
+						props.onClick();
+					}}
+				>
+					Odrzuć
+				</HexagonButton>
 			</ol>
 		</article>
 	);
