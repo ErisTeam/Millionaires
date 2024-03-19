@@ -435,7 +435,8 @@ func WebsocketRun(conn *websocket.Conn) {
 			} else {
 				target.stopTimeout()
 
-				response, err := proto.Marshal(msg)
+				res := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_CallResponse, Payload: &protobufMessages.WebsocketMessage_CallResponse{CallResponse: &protobufMessages.CallResponsePayload{Accepted: msg.Accepted}}}
+				response, err := proto.Marshal(res)
 				if err != nil {
 					println("proto: ", err.Error())
 					return

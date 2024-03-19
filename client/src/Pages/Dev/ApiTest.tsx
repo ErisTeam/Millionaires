@@ -16,6 +16,7 @@ import {
 } from '../../protobufMessages/Run';
 import { MessagePayload, MessageType, WebsocketMessage } from '@/protobufMessages/WebSocketMessages';
 import { For, Show, createSignal } from 'solid-js';
+import { useAppState } from '@/AppState';
 
 export default () => {
 	const [runId, setRunId] = createSignal('');
@@ -259,7 +260,10 @@ export default () => {
 							const m = WebsocketMessage.create();
 							m.type = MessageType.StartCall;
 
-							ws()?.send(WebsocketMessage.encode(m).finish());
+							const appState = useAppState();
+							appState.setRunID(runId());
+							appState.useLifeLine(Lifeline.friendCall);
+							// ws()?.send(WebsocketMessage.encode(m).finish());
 						}}
 					>
 						Call

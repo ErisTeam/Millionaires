@@ -20,6 +20,40 @@ export default function StartPage() {
 		connect();
 	});
 
+	function onStartRunClick(e: MouseEvent) {
+		e.preventDefault();
+		//We arent using the appstate directly because you cant narrow a type from a signal because each function call can possibly return a different value
+		const username = AppState.username();
+		if (username == undefined) {
+			setShowPopup(true);
+			return;
+		}
+		startRun(username)
+			.then((run) => {
+				AppState.setRunID(run.runId);
+				AppState.setCurrentQuestion(run.question);
+				AppState.setQuestionsStatus((prev) => {
+					let newState = [...prev];
+					for (let i = 0; i < newState.length; i++) {
+						newState[i].answered = false;
+					}
+					return newState;
+				});
+				AppState.setLifeLines({ fiftyFifty: true, friendCall: true, publicChoice: true });
+				if (AppState.websocket.ws() == undefined) {
+					connect(true);
+				} else {
+					identify();
+				}
+
+				navigate('/game');
+			})
+			.catch((e) => {
+				console.error(e);
+				alert('Nie mozna polaczyc z serwerem');
+			});
+	}
+
 	return (
 		<div class={style.container}>
 			<LeaderboardStateProvider>
@@ -36,40 +70,7 @@ export default function StartPage() {
 						/>
 					</li>
 					<li>
-						<HexagonButton
-							class={style.startButton}
-							hexagonClass={style.hexagon}
-							onClick={(e) => {
-								e.preventDefault();
-								//We arent using the appstate directly because you cant narrow a type from a signal because each function call can possibly return a different value
-								const username = AppState.username();
-								if (username == undefined) {
-									setShowPopup(true);
-									return;
-								}
-								startRun(username)
-									.then((run) => {
-										AppState.setRunID(run.runId);
-										AppState.setCurrentQuestion(run.question);
-										AppState.setQuestionsStatus((prev) => {
-											let newState = [...prev];
-											for (let i = 0; i < newState.length; i++) {
-												newState[i].answered = false;
-											}
-											return newState;
-										});
-										AppState.setLifeLines({ fiftyFifty: true, friendCall: true, publicChoice: true });
-
-										identify();
-
-										navigate('/game');
-									})
-									.catch((e) => {
-										console.error(e);
-										alert('Nie mozna polaczyc z serwerem');
-									});
-							}}
-						>
+						<HexagonButton class={style.startButton} hexagonClass={style.hexagon} onClick={onStartRunClick}>
 							<span>Zacznij gre!</span>
 						</HexagonButton>
 					</li>

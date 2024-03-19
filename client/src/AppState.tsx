@@ -1,17 +1,18 @@
 import { JSXElement, createContext, createSignal, useContext } from 'solid-js';
 import { Locale } from './Translation';
 import { GetQuestionResponse } from './protobufMessages/Questions';
-import { connect } from './websocket';
+import { connect, createEvent, sendMessage } from './websocket';
 import { Lifeline } from './protobufMessages/Lifelines';
 import { useLifeLineRequest } from './helpers';
+import { MessagePayload, MessageType, WebsocketMessage } from './protobufMessages/WebSocketMessages';
+import { createStore } from 'solid-js/store';
 
 const [ws, setWs] = createSignal<WebSocket | undefined>(undefined);
-const [incomingCall, setIncomingCall] = createSignal<
-	| {
-			callerName: string;
-	  }
-	| undefined
->(undefined);
+const [currentCall, setCurrentCall] = createStore<{
+	callerName: string;
+	messages: MessagePayload[];
+	acceped: boolean;
+}>({ callerName: '', messages: [], acceped: false });
 
 const [locale, setLocale] = createSignal<Locale>('pl_PL');
 const [runID, setRunID] = createSignal<string | undefined>(undefined);
@@ -42,7 +43,7 @@ async function useLifeLine(lifeLine: Lifeline) {
 	console.log(ContextValue, 'aaa');
 	console.log(runID(), 'runID');
 	if (runID() == undefined) {
-		return;
+		throw 'run id is not set';
 	}
 	const response = await useLifeLineRequest(runID() as string, lifeLine);
 	setLifeLines((prev) => {
@@ -82,9 +83,44 @@ const ContextValue = {
 	websocket: {
 		ws,
 		setWs,
-		incomingCall,
-		setIncomingCall,
-		onCall: () => {},
+		currentCall,
+		setCurrentCall,
+		onIncomingCall: createEvent<void>(),
+		onCall: createEvent<void>(),
+		onEndCall: createEvent<void>(),
+		onCallResponse: createEvent<boolean>(),
+
+		//TODO: move to websocket.tsx
+		acceptCall: () => {
+			if (!ws()) {
+				throw 'ws is undefined';
+			}
+			if (!currentCall.callerName) {
+				throw 'not in call';
+			}
+			const m = WebsocketMessage.create();
+			m.type = MessageType.CallResponse;
+			m.callResponse = {
+				accepted: true,
+			};
+			ws()?.send(WebsocketMessage.encode(m).finish());
+		},
+		//TODO: move to websocket.tsx
+		rejectCall: () => {
+			if (!ws()) {
+				throw 'ws is undefined';
+			}
+			if (!currentCall.callerName) {
+				throw 'not in call';
+			}
+			const m = WebsocketMessage.create();
+			m.type = MessageType.CallResponse;
+			m.callResponse = {
+				accepted: false,
+			};
+			ws()?.send(WebsocketMessage.encode(m).finish());
+		},
+		sendMessage: sendMessage,
 	},
 
 	resetState: () => {
