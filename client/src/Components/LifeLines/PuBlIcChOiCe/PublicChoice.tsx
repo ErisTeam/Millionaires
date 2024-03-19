@@ -20,46 +20,26 @@ function weightedRandom(weights: number[]) {
 }
 
 export default () => {
-	const [percentages, setPercentages] = createSignal<{ percentage: number; winner?: boolean }[]>([
-		{
-			percentage: 71,
-		},
-		{
-			percentage: 84,
-			winner: true,
-		},
-		{
-			percentage: 70,
-		},
-		{
-			percentage: 33,
-		},
-		// {
-		// 	percentage: 33,
-		// },
-		// {
-		// 	percentage: 33,
-		// },
-		// {
-		// 	percentage: 33,
-		// },
-		// {
-		// 	percentage: 33,
-		// },
-	]);
+	const [percentages, setPercentages] = createSignal<number[]>([12, 43, 43, 2]);
 
-	// onMount(() => {
-	// 	let c = 0;
-	// 	let r = setInterval(() => {
-	// 		setPercentages((prev)=>{
-	// 			let new = [...prev]
-	// 			for (let i = 0; i < new.length; i++) {
-
-	// 			}
-	// 		})
-
-	// 	}, 100);
-	// });
+	onMount(() => {
+		let iters = 0;
+		// randomize percentages
+		let interv = setInterval(() => {
+			if (iters > 20) {
+				clearInterval(interv);
+				//Set the percentages to the real ones
+				setPercentages([12, 54, 32, 2]);
+				return;
+			}
+			const votes = new Array(percentages().length).fill(0);
+			for (let i = 0; i < votes.length; i++) {
+				votes[i] = Math.floor(Math.random() * 85 + 15);
+			}
+			setPercentages(votes);
+			iters++;
+		}, 450);
+	});
 
 	return (
 		<section class={style.publicChoice + ' ' + line.lifeLine}>
@@ -68,11 +48,11 @@ export default () => {
 					{(v, index) => (
 						<li
 							class={style.c}
-							classList={{ [style.winner]: v().winner }}
-							style={{ '--percentage': `${v().percentage}%` }}
+							classList={{ [style.winner]: v() === Math.max(...percentages().map((v) => v)) }}
+							style={{ '--percentage': `${v()}%` }}
 						>
 							<span class={style.p}>
-								<span class={style.title}>{v().percentage}%</span>
+								<span class={style.title}>{v()}%</span>
 							</span>
 							<span class={style.title}>{String.fromCharCode('A'.charCodeAt(0) + index)}</span>
 						</li>
