@@ -4,13 +4,17 @@
 	grid-area: leaderboard;
 	flex-direction: column;
 	align-items: center;
+	backdrop-filter: blur(4px);
+	border-radius: 25px;
+	background-color: #00000049;
 	padding: 2rem;
-	width: 100%;
-	height: 100%;
+	width: 85%;
+	height: 90%;
 	max-height: 100vh;
 
 	& > h1 {
-		font-size: 3rem;
+		font-size: 2rem;
+		white-space: nowrap;
 	}
 	& > ol {
 		display: flex;
@@ -48,7 +52,7 @@
 				justify-content: center;
 				align-items: center;
 				vertical-align: middle;
-				font-size: 1.5rem;
+				font-size: 1.25rem;
 			}
 		}
 		& > li:nth-child(1),
@@ -70,8 +74,8 @@
 			}
 
 			& > span > svg {
-				width: 2em;
-				height: 2em;
+				width: 1.75em;
+				height: 1.75em;
 			}
 		}
 		& > li:nth-child(1) {

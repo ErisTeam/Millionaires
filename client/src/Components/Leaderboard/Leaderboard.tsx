@@ -15,7 +15,7 @@ export default function Leaderboard() {
 	});
 	return (
 		<aside class={style.leaderBoard}>
-			<h1>Leaderboard</h1>
+			<h1>Najlepsze wyniki:</h1>
 			<ol class={style.list} ref={parent}>
 				<For each={state.users()}>
 					{(user, index) => (
@@ -27,7 +27,7 @@ export default function Leaderboard() {
 				</For>
 			</ol>
 
-			<button
+			{/* <button
 				onclick={() => {
 					state.setUsers((prev) => {
 						return [...prev, { name: 'newuser', score: Math.floor(Math.random() * 9000) }].sort(
@@ -38,7 +38,7 @@ export default function Leaderboard() {
 				style={'color: black'}
 			>
 				Add User
-			</button>
+			</button> */}
 		</aside>
 	);
 }
