@@ -27,7 +27,12 @@ message FiftyFiftyResponse {
     repeated Answers.Answer answers = 2;
 }
 
+message AudienceResponseItem{
+    string id = 1;
+    int32 percentage = 2;
+
+}
+
 message AudienceResponse {
-    repeated Answers.Answer answers = 1;
-    repeated float percentage = 2;
+    repeated AudienceResponseItem answers = 1;
 }

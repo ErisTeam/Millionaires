@@ -4,6 +4,8 @@ import (
 	//"database/sql"
 	"database/sql"
 	"fmt"
+	"math"
+	"math/rand"
 	"millionairesServer/protobufMessages"
 	"net/http"
 	"strconv"
@@ -13,6 +15,19 @@ import (
 )
 
 type Lifeline int
+
+var Weights = [][]int{
+	{80, 10, 5, 5},
+
+	{80, 10, 5, 5},
+
+	{75, 10, 5, 5},
+
+	{70, 10, 5, 5},
+
+	{65, 10, 5, 5},
+
+	{55, 10, 5, 5}}
 
 const (
 	LlUnknown    Lifeline = -1
@@ -128,9 +143,51 @@ func useLifeline(ctx *fiber.Ctx) error {
 		{
 			lifeline = LlAudience
 			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
+			answers := []*protobufMessages.AudienceResponseItem{}
+			difficulty := 0
 			if !wasLifelineUsed {
+				answersSQL, err := db.Query("SELECT answers.id, questions.difficulty FROM answers JOIN questions ON answers.question_id = questions.id WHERE answers.question_id = ( SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = ? AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) ORDER BY answers.is_correct DESC, RANDOM() LIMIT 4;", runId.RawSnowflake)
+				if err != nil {
+					c_error(ctx, fmt.Sprintf("Unable to complete 50/50: `%s`", err), fiber.ErrInternalServerError.Code)
+				}
+				defer answersSQL.Close()
 
+				for answersSQL.Next() {
+					answer := int64(0)
+					answersSQL.Scan(&answer, &difficulty)
+					answers = append(answers, &protobufMessages.AudienceResponseItem{Id: strconv.FormatInt(answer, 10)})
+				}
+				percentages := []int32{0, 0, 0, 0}
+				for i := 0; i < 250; i++ {
+					randomNumber := rand.Intn(100)
+					if randomNumber > 100-Weights[difficulty][0] {
+						percentages[0]++
+					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1] {
+						percentages[1]++
+					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2] {
+						percentages[2]++
+					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2]-Weights[difficulty][3] {
+						percentages[3]++
+					}
+
+				}
+
+				for i := 0; i < 4; i++ {
+
+					answers[i].Percentage = int32(math.Round((float64(percentages[i]) / 250.0) * 100.0))
+
+				}
+
+				answersSQL.Close()
 			}
+
+			response.Payload = &protobufMessages.UseLifelineResponse_Audience{
+				Audience: &protobufMessages.AudienceResponse{
+					Answers: answers,
+				},
+			}
+
+			break
 		}
 	}
 

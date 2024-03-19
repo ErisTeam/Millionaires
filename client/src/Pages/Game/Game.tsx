@@ -3,7 +3,7 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Match, Show, Switch, createSignal, onCleanup } from 'solid-js';
+import { For, Match, Show, Switch, createSignal, onCleanup, onMount } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { LifeLineType, useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
@@ -12,7 +12,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal'
 import PublicChoice from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
 import FriendCalling from '@/Components/LifeLines/FriendCalling/FriendCalling';
-import { AudienceResponse, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
+import { AudienceResponse, AudienceResponseItem, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
 import { EndRunRequest, EndRunResponse } from '@/protobufMessages/Run';
 import { END_RUN_ENDPOINT } from '@/constants';
 import { createStore, produce } from 'solid-js/store';
@@ -48,6 +48,7 @@ export default function Game() {
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
 	const [confirmed, setConfirmed] = createSignal(false);
 	const [disabledAnswers, setDisabledAnswers] = createSignal<number[]>([]);
+	const [audienceVotes, setAudienceVotes] = createSignal<AudienceResponseItem[]>([]);
 
 	async function answer(answerId: number) {
 		let runId = AppState.runID();
@@ -128,7 +129,7 @@ export default function Game() {
 			<main class={style.game}>
 				<div class={style.ai}>
 					<div class={style.host}>
-						<iframe
+						{/* <iframe
 							style={{
 								'pointer-events': 'none',
 							}}
@@ -137,7 +138,7 @@ export default function Game() {
 							src="https://www.youtube.com/embed/eRXE8Aebp7s?autoplay=1&controls=0&loop=1"
 							title="10 hour loop playing Subway Surfers"
 							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-						></iframe>
+						></iframe> */}
 					</div>
 				</div>
 				<div class={style.questionContainer}>
@@ -176,7 +177,7 @@ export default function Game() {
 							<FriendCall />
 						</Show>
 						<Show when={overlay.includes('PublicChoice')}>
-							<PublicChoice />
+							<PublicChoice finalPercentages={audienceVotes()} />
 						</Show>
 						<Show when={overlay.includes('FriendCalling')}>
 							<FriendCalling
@@ -194,7 +195,9 @@ export default function Game() {
 					let l: LifeLineType | null = null;
 					switch (lifeline) {
 						case Lifeline.audience:
+							console.log('lifeline', lifeline, res);
 							l = 'PublicChoice';
+							setAudienceVotes(res.audience!.answers);
 							break;
 						case Lifeline.fiftyFifty:
 							console.log('lifeline', lifeline, res);

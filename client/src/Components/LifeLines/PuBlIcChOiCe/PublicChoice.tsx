@@ -1,9 +1,9 @@
 import { IconUsersGroup } from '@tabler/icons-solidjs';
 import style from './PublicChoice.module.css';
 import line from '../LifeLine.module.css';
-import ExampleAnswers from '@/TestData/Answer';
-import { Answer } from '@/protobufMessages/Answers';
-import { For, Index, createSignal, onMount } from 'solid-js';
+import { Index, createSignal, onMount } from 'solid-js';
+import { AudienceResponseItem } from '@/protobufMessages/Lifelines';
+import { useAppState } from '@/AppState';
 
 function weightedRandom(weights: number[]) {
 	let cumulativeWeights: number[] = [];
@@ -18,8 +18,11 @@ function weightedRandom(weights: number[]) {
 	}
 	return -1;
 }
-
-export default () => {
+type PublicChoiceProps = {
+	finalPercentages: AudienceResponseItem[];
+};
+export default (props: PublicChoiceProps) => {
+	const AppState = useAppState();
 	const [percentages, setPercentages] = createSignal<number[]>([12, 43, 43, 2]);
 
 	onMount(() => {
@@ -28,8 +31,21 @@ export default () => {
 		let interv = setInterval(() => {
 			if (iters > 20) {
 				clearInterval(interv);
-				//Set the percentages to the real ones
-				setPercentages([12, 54, 32, 2]);
+				const properRates = [0, 0, 0, 0];
+				properRates[0] = props.finalPercentages.find(
+					(v) => v.id == AppState.currentQuestion()!.answers[0].id.toString(),
+				)?.percentage!;
+				properRates[1] = props.finalPercentages.find(
+					(v) => v.id == AppState.currentQuestion()!.answers[1].id.toString(),
+				)?.percentage!;
+				properRates[2] = props.finalPercentages.find(
+					(v) => v.id == AppState.currentQuestion()!.answers[2].id.toString(),
+				)?.percentage!;
+				properRates[3] = props.finalPercentages.find(
+					(v) => v.id == AppState.currentQuestion()!.answers[3].id.toString(),
+				)?.percentage!;
+
+				setPercentages(properRates);
 				return;
 			}
 			const votes = new Array(percentages().length).fill(0);
