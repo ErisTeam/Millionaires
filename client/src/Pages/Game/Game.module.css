@@ -60,10 +60,10 @@
 		width: 100%;
 		height: 100%;
 		.host {
-			background-image: url('../assets/host.png');
-		}
-		.questionImg {
-			background-image: url('../assets/questionImg.png');
+			background-color: red;
+			> video {
+				width: 100%;
+			}
 		}
 		.host,
 		.questionImg {

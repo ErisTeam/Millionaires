@@ -107,7 +107,16 @@ export default function Game() {
 		<div class={style.container}>
 			<main class={style.game}>
 				<div class={style.ai}>
-					<div class={style.host}></div>
+					<div class={style.host}>
+						<iframe
+							width="100%"
+							height="100%"
+							src="https://www.youtube.com/embed/eRXE8Aebp7s?autoplay=1"
+							title="10 hour loop playing Subway Surfers"
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+							allowfullscreen
+						></iframe>
+					</div>
 				</div>
 				<div class={style.questionContainer}>
 					<Question question={AppState.currentQuestion()?.question as QuestionT} />
