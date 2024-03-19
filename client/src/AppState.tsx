@@ -1,7 +1,7 @@
 import { JSXElement, createContext, createSignal, useContext } from 'solid-js';
 import { Locale } from './Translation';
 import { GetQuestionResponse } from './protobufMessages/Questions';
-import { connect, createEvent, sendMessage } from './websocket';
+import { acceptCall, connect, createEvent, endCall, sendMessage } from './websocket';
 import { Lifeline } from './protobufMessages/Lifelines';
 import { useLifeLineRequest } from './helpers';
 import { MessagePayload, MessageType, WebsocketMessage } from './protobufMessages/WebSocketMessages';
@@ -12,7 +12,8 @@ const [currentCall, setCurrentCall] = createStore<{
 	callerName: string;
 	messages: MessagePayload[];
 	acceped: boolean;
-}>({ callerName: '', messages: [], acceped: false });
+	side: 'caller' | 'callee' | null;
+}>({ callerName: '', messages: [], acceped: false, side: null });
 
 const [locale, setLocale] = createSignal<Locale>('pl_PL');
 const [runID, setRunID] = createSignal<string | undefined>(undefined);
@@ -89,22 +90,7 @@ const ContextValue = {
 		onCall: createEvent<void>(),
 		onEndCall: createEvent<void>(),
 		onCallResponse: createEvent<boolean>(),
-
-		//TODO: move to websocket.tsx
-		acceptCall: () => {
-			if (!ws()) {
-				throw 'ws is undefined';
-			}
-			if (!currentCall.callerName) {
-				throw 'not in call';
-			}
-			const m = WebsocketMessage.create();
-			m.type = MessageType.CallResponse;
-			m.callResponse = {
-				accepted: true,
-			};
-			ws()?.send(WebsocketMessage.encode(m).finish());
-		},
+		acceptCall: acceptCall,
 		//TODO: move to websocket.tsx
 		rejectCall: () => {
 			if (!ws()) {
@@ -120,6 +106,7 @@ const ContextValue = {
 			};
 			ws()?.send(WebsocketMessage.encode(m).finish());
 		},
+		endCall: endCall,
 		sendMessage: sendMessage,
 	},
 

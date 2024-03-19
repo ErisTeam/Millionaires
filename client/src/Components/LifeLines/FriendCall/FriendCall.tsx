@@ -9,7 +9,7 @@ interface FriendCallProps {}
 export default (props: FriendCallProps) => {
 	const appState = useAppState();
 	const [showTimeLeft, setShowTimeLeft] = createSignal(false);
-	const [timeLeft, setTimeLeft] = createSignal(30);
+	const [timeLeft, setTimeLeft] = createSignal(45);
 	let a = () => {
 		setShowTimeLeft(true);
 		if (timeLeft() <= 5) {
@@ -84,6 +84,7 @@ export default (props: FriendCallProps) => {
 							console.log(e.key);
 							if (e.key == 'Enter') {
 								appState.websocket.sendMessage(e.currentTarget.value);
+								e.currentTarget.value = '';
 							}
 						}}
 						type="text"
@@ -92,7 +93,15 @@ export default (props: FriendCallProps) => {
 					<Hexagon />
 				</div>
 			</div>
-			<button class={line.icon + ' ' + style.icon} onmouseenter={() => {}} onmouseleave={() => {}}>
+			<button
+				class={line.icon + ' ' + style.icon}
+				onclick={() => {
+					console.log('end Call');
+					appState.websocket.endCall();
+				}}
+				onmouseenter={() => {}}
+				onmouseleave={() => {}}
+			>
 				<Show when={showTimeLeft()} fallback={<IconPhoneOff />}>
 					{format(timeLeft())}
 				</Show>

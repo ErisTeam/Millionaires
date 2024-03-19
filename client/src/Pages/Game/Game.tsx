@@ -123,8 +123,8 @@ export default function Game() {
 		console.log('Call end');
 		setOverlay(
 			produce((prev) => {
-				prev.slice(prev.indexOf('FriendCalling'), 1);
-				prev.slice(prev.indexOf('FriendCall'), 1);
+				prev.splice(prev.indexOf('FriendCalling'), 1);
+				prev.splice(prev.indexOf('FriendCall'), 1);
 			}),
 		);
 	}
@@ -135,7 +135,7 @@ export default function Game() {
 	AppState.websocket.onCallResponse.subscribe((data) => {
 		setOverlay(
 			produce((prev) => {
-				prev.slice(prev.indexOf('FriendCalling'), 1);
+				prev.splice(prev.indexOf('FriendCalling'), 1);
 
 				if (!prev.includes('FriendCall') && data) {
 					prev.push('FriendCall');
@@ -213,6 +213,11 @@ export default function Game() {
 											}
 										}),
 									);
+									AppState.websocket.setCurrentCall(
+										produce((prev) => {
+											prev.acceped = true;
+										}),
+									);
 								}}
 							/>
 						</Show>
@@ -237,7 +242,6 @@ export default function Game() {
 							break;
 						case Lifeline.friendCall:
 							l = 'FriendCall';
-
 							break;
 					}
 					if (!l) {

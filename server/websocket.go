@@ -19,6 +19,8 @@ type WebSocketClientState struct {
 	callTimeout *time.Timer
 
 	connection *websocket.Conn
+
+	playerName string
 }
 
 func (s *WebSocketClientState) resetCall() {
@@ -115,11 +117,12 @@ func (c *WebSocketClientManager) removeUnidentifiedClient(conn *websocket.Conn) 
 	}
 }
 
-func (c *WebSocketClientManager) identifyClient(conn *websocket.Conn, runId Snowflake) {
+func (c *WebSocketClientManager) identifyClient(conn *websocket.Conn, runId Snowflake, playerName string) {
 	c.removeUnidentifiedClient(conn)
 	clientState := new(WebSocketClientState)
 	clientState.resetCall()
 	clientState.connection = conn
+	clientState.playerName = playerName
 	c.clients[runId] = clientState
 }
 
@@ -184,30 +187,30 @@ func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) erro
 	currentClient.inCall = true
 	targetState.inCall = true
 
-	var callerName string
-	var calleeName string
-	rows, err := clientManager.dbConnection.Query("SELECT runs.snowflake_id,players.name from players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ? OR runs.snowflake_id = ?", currentId.RawSnowflake, targetId.RawSnowflake)
-	if err != nil {
-		println("db: ", err.Error())
-		return err
-	}
-	for rows.Next() {
-		var snowflakeId string
-		var name string
-		if err := rows.Scan(&snowflakeId, &name); err != nil {
-			println("db: ", err.Error())
-			return err
-		}
-		println("name: ", name, " snowflakeid: ", snowflakeId)
-		if snowflakeId == currentId.StringIDDec() {
-			callerName = name
-		} else {
-			calleeName = name
-		}
-	}
+	// var callerName string
+	// var calleeName string
+	// rows, err := clientManager.dbConnection.Query("SELECT runs.snowflake_id,players.name from players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ? OR runs.snowflake_id = ?", currentId.RawSnowflake, targetId.RawSnowflake)
+	// if err != nil {
+	// 	println("db: ", err.Error())
+	// 	return err
+	// }
+	// for rows.Next() {
+	// 	var snowflakeId string
+	// 	var name string
+	// 	if err := rows.Scan(&snowflakeId, &name); err != nil {
+	// 		println("db: ", err.Error())
+	// 		return err
+	// 	}
+	// 	println("name: ", name, " snowflakeid: ", snowflakeId)
+	// 	if snowflakeId == currentId.StringIDDec() {
+	// 		callerName = name
+	// 	} else {
+	// 		calleeName = name
+	// 	}
+	// }
 
 	msg = &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_IncomingCall}
-	msg.Payload = &protobufMessages.WebsocketMessage_IncomingCall{IncomingCall: &protobufMessages.IncomingCallPayload{CallerName: callerName}}
+	msg.Payload = &protobufMessages.WebsocketMessage_IncomingCall{IncomingCall: &protobufMessages.IncomingCallPayload{CallerName: currentClient.playerName}}
 
 	response, err := proto.Marshal(msg)
 	if err != nil {
@@ -218,7 +221,7 @@ func (clientManager *WebSocketClientManager) StartCall(currentId Snowflake) erro
 	targetState.connection.WriteMessage(websocket.BinaryMessage, response)
 
 	msg.Type = protobufMessages.MessageType_CallServerResponse
-	msg.Payload = &protobufMessages.WebsocketMessage_CallServerResponse{CallServerResponse: &protobufMessages.CallServerResponsePayload{CalleeName: calleeName}}
+	msg.Payload = &protobufMessages.WebsocketMessage_CallServerResponse{CallServerResponse: &protobufMessages.CallServerResponsePayload{CalleeName: targetState.playerName}}
 
 	response, err = proto.Marshal(msg)
 	if err != nil {
@@ -377,11 +380,13 @@ func WebsocketRun(conn *websocket.Conn) {
 			}
 
 			loggerInfo.Println("Identifying client with run id: ", runId.RawSnowflake)
-			row := clientManager.dbConnection.QueryRow("SELECT ended FROM runs WHERE snowflake_id = ?", runId.RawSnowflake)
+
+			row := clientManager.dbConnection.QueryRow("SELECT runs.ended,players.name from players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ?", runId.RawSnowflake)
 
 			var ended bool
+			var playerName string
 
-			if row.Scan(&ended) != nil {
+			if row.Scan(&ended, &playerName) != nil {
 				println("Run not found", runId.StringIDDec())
 				conn.WritePreparedMessage(noIdentifiedResponse)
 
@@ -396,7 +401,7 @@ func WebsocketRun(conn *websocket.Conn) {
 
 			loggerInfo.Println("Identified client with run id: ", runId)
 
-			clientManager.identifyClient(conn, runId)
+			clientManager.identifyClient(conn, runId, playerName)
 
 			response, err := proto.Marshal(&protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Identify, Payload: &protobufMessages.WebsocketMessage_Empty{Empty: &protobufMessages.EmptyPayload{}}})
 			if err != nil {
@@ -432,12 +437,27 @@ func WebsocketRun(conn *websocket.Conn) {
 				}
 
 				conn.WriteMessage(websocket.BinaryMessage, response)
-
 				currentClient.resetCall()
-
-				msg.Accepted = false
 			} else {
 				target.stopTimeout()
+				if msg.Accepted {
+					target.callTimeout = time.NewTimer(time.Second * 45)
+					go func() {
+						<-target.callTimeout.C
+						if !target.inCall {
+							return
+						}
+						res := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_EndCall}
+						response, err := proto.Marshal(res)
+						if err != nil {
+							println("proto: ", err.Error())
+							return
+						}
+						target.connection.WriteMessage(websocket.BinaryMessage, response)
+						currentClient.connection.WriteMessage(websocket.BinaryMessage, response)
+
+					}()
+				}
 
 				res := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_CallResponse, Payload: &protobufMessages.WebsocketMessage_CallResponse{CallResponse: &protobufMessages.CallResponsePayload{Accepted: msg.Accepted}}}
 				response, err := proto.Marshal(res)
@@ -445,7 +465,6 @@ func WebsocketRun(conn *websocket.Conn) {
 					println("proto: ", err.Error())
 					return
 				}
-
 				target.connection.WriteMessage(websocket.BinaryMessage, response)
 			}
 
@@ -476,7 +495,9 @@ func WebsocketRun(conn *websocket.Conn) {
 			}
 			targetConnection := clientManager.clients[*currentClient.target].connection
 
-			binary, err := proto.Marshal(protoMsg)
+			msg := protoMsg.GetMessage()
+			res := &protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_Message, Payload: &protobufMessages.WebsocketMessage_Message{Message: &protobufMessages.MessagePayload{Message: msg.Message, AuthorName: currentClient.playerName}}}
+			binary, err := proto.Marshal(res)
 			if err != nil {
 				println("proto: ", err.Error())
 				return
@@ -484,8 +505,8 @@ func WebsocketRun(conn *websocket.Conn) {
 
 			targetConnection.WriteMessage(websocket.BinaryMessage, binary)
 			conn.WriteMessage(websocket.BinaryMessage, binary)
-			break
 		case protobufMessages.MessageType_EndCall:
+			println("End Call rec")
 			var _, currentClient = clientManager.GetClientByConnection(conn)
 			if currentClient == nil {
 				conn.WritePreparedMessage(noIdentifiedResponse)
@@ -504,6 +525,7 @@ func WebsocketRun(conn *websocket.Conn) {
 				return
 			}
 			targetClient.connection.WriteMessage(websocket.BinaryMessage, response)
+			currentClient.connection.WriteMessage(websocket.BinaryMessage, response)
 		}
 
 	}

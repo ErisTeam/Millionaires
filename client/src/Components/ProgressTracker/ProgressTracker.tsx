@@ -14,6 +14,7 @@ import { Lifeline, UseLifelineResponse } from '@/protobufMessages/Lifelines';
 
 type ProgressTrackerProps = {
 	onLifeLineUse(lifeline: Lifeline, response: UseLifelineResponse): void;
+	disabled?: boolean;
 };
 
 export default function ProgressTracker(props: ProgressTrackerProps) {

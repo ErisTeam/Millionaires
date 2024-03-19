@@ -4,6 +4,10 @@ const [users, setUsers] = createSignal([
 	{ name: 'furras', score: 3333 },
 	{ name: 'marcin', score: 2222 },
 	{ name: 'to', score: 2221 },
+	{
+		name: 'a',
+		score: 1,
+	},
 ]);
 
 const ContextValue = {

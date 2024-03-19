@@ -19,8 +19,16 @@ export default function Leaderboard() {
 			<ol class={style.list} ref={parent}>
 				<For each={state.users()}>
 					{(user, index) => (
-						<li class={style.user}>
-							<span>{index() <= 2 ? <IconAward></IconAward> : index() + 1}</span> <span>{user.name}</span>
+						<li
+							class={style.user}
+							classList={{
+								[style.topThree]: index() < 3,
+							}}
+						>
+							<span class={style.marker}>
+								{index() <= 2 ? <IconAward class={style.marker}></IconAward> : index() + 1}
+							</span>{' '}
+							<span>{user.name}</span>
 							<span>{user.score}</span>
 						</li>
 					)}

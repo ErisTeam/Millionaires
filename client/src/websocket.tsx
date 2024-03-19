@@ -71,6 +71,7 @@ export async function connect(indentify?: boolean) {
 					callerName: decodedMessage.incomingCall?.callerName || '',
 					messages: [],
 					acceped: false,
+					side: 'callee',
 				});
 				appState.websocket.onIncomingCall.emit();
 				break;
@@ -102,15 +103,19 @@ export async function connect(indentify?: boolean) {
 					appState.websocket.setCurrentCall(produce((prev) => (prev.acceped = true)));
 
 					appState.websocket.onCallResponse.emit(true);
-					appState.websocket.setCurrentCall(
-						produce((prev) => {
-							prev.acceped = true;
-						}),
-					);
 				} else {
 					// setInCall(false);
 					appState.websocket.onCallResponse.emit(false);
 				}
+				break;
+			case MessageType.CallServerResponse:
+				const response = decodedMessage.callServerResponse;
+				appState.websocket.setCurrentCall(
+					produce((prev) => {
+						prev.side = 'caller';
+						prev.callerName = response?.calleeName as string;
+					}),
+				);
 				break;
 		}
 	};
@@ -166,5 +171,18 @@ export function acceptCall() {
 	m.callResponse = {
 		accepted: true,
 	};
+	ws.send(WebsocketMessage.encode(m).finish());
+}
+export function endCall() {
+	const appState = useAppState();
+	if (!ws) {
+		throw 'ws is undefined';
+	}
+	if (!appState.websocket.currentCall.callerName) {
+		throw 'not in call';
+	}
+	console.log('endCall send');
+	const m = WebsocketMessage.create();
+	m.type = MessageType.EndCall;
 	ws.send(WebsocketMessage.encode(m).finish());
 }
