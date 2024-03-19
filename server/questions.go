@@ -36,22 +36,22 @@ func difficultyScaling(questionNum int) int {
 func getRandomQuestion(c *fiber.Ctx, runId Snowflake, difficulty int) (*protobufMessages.GetQuestionResponse, error) {
 	var db = c.Locals("db").(*sql.DB)
 
-	logger.Printf("Getting a random question of difficulty `%d`.", difficulty)
+	loggerInfo.Printf("Getting a random question of difficulty `%d`.", difficulty)
 
 	randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq JOIN runs r ON rq.run_id = r.snowflake_id WHERE r.player_id = (SELECT player_id FROM runs WHERE snowflake_id = ?)) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
 	var randomQuestion protobufMessages.Question
 	err := randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
 
-	// Fallback if the player has seen all questions, could be done with a query but who cares
-	if err == sql.ErrNoRows {
-		logger.Printf("Player of a run with id `%d` has seen all questions of difficulty `%d`.", runId.RawSnowflake, difficulty)
-		randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq WHERE rq.run_id = ?) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
-		err = randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
+    // Fallback if the player has seen all questions, could be done with a query but who cares
+    if err == sql.ErrNoRows {
+        loggerInfo.Printf("Player of a run with id `%d` has seen all questions of difficulty `%d`.", runId.RawSnowflake, difficulty)
+        randomQuestionRow := db.QueryRow("SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_questions rq WHERE rq.run_id = ?) AND q.difficulty = ? ORDER BY RANDOM() LIMIT 1;", runId.RawSnowflake, difficulty)
+        err = randomQuestionRow.Scan(&randomQuestion.Id, &randomQuestion.Question, &randomQuestion.Difficulty, &randomQuestion.Impressions)
 
-		if err == sql.ErrNoRows {
-			logger.Printf("No question could be found with a difficulty of `%d`.", difficulty)
-		}
-	}
+        if err == sql.ErrNoRows {
+            loggerInfo.Printf("No question could be found with a difficulty of `%d`.", difficulty)
+        }
+    }
 
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func answerQuestion(c *fiber.Ctx) error {
 		return c_error(c, "The last asked question was already answered", fiber.ErrBadRequest.Code)
 	}
 
-	logger.Printf("Player of run with id `%d` answered the question with id `%d` with an answer of id `%d`", runId.RawSnowflake, runQuestionQuestionId, request.AnswerId)
+    loggerInfo.Printf("Player of run with id `%d` answered the question with id `%d` with an answer of id `%d`", runId.RawSnowflake, runQuestionQuestionId, request.AnswerId)
 
 	// Check if the answer is relevant to the question and is correct
 	answerCorrectnesRow := db.QueryRow("SELECT COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ?), FALSE) AS is_answer_relevant, COALESCE((SELECT TRUE FROM answers JOIN questions ON questions.id = answers.question_id WHERE answers.id = ? AND questions.id = ? AND answers.is_correct = TRUE), FALSE) AS is_answer_correct;", request.AnswerId, runQuestionQuestionId, request.AnswerId, runQuestionQuestionId)
