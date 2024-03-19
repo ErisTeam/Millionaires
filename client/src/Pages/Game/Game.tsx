@@ -13,9 +13,23 @@ import PublicChoice from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
 import FriendCalling from '@/Components/LifeLines/FriendCalling/FriendCalling';
 import { AudienceResponse, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
+import { EndRunRequest, EndRunResponse } from '@/protobufMessages/Run';
+import { END_RUN_ENDPOINT } from '@/constants';
 
 const AnswerAnimationTimeout = 2000;
+async function finishRun(runId: string) {
+	let request = EndRunRequest.create();
+	request.runId = runId;
+	let res = await (
+		await fetch(END_RUN_ENDPOINT, {
+			method: 'POST',
+			body: EndRunRequest.encode(request).finish(),
+		})
+	).arrayBuffer();
 
+	let response = EndRunResponse.decode(new Uint8Array(res));
+	console.log(response);
+}
 export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
@@ -55,11 +69,6 @@ export default function Game() {
 				let result = await promise;
 				console.log(result);
 				if (result!.isCorrect) {
-					if (result!.nextQuestion == undefined) {
-						alert('Koniec');
-						navigate('/results');
-						return;
-					}
 					AppState.setQuestionsStatus((prev) => {
 						let f = prev.findIndex((v) => v.answered == false);
 						if (f != undefined) {
@@ -72,6 +81,10 @@ export default function Game() {
 						return prev;
 					});
 					console.log(AppState.questionsStatus());
+					if (result!.nextQuestion == undefined) {
+						navigate('/results');
+						return;
+					}
 					AppState.setCurrentQuestion(result!.nextQuestion);
 				} else {
 					alert('Zle');
