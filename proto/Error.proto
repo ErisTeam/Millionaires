@@ -3,7 +3,7 @@ option go_package = "protobufMessages/";
 
 package millionaires.Error;
 
-message Error{
+message MillionairesError {
     string message = 1;
     string where = 2;
 }

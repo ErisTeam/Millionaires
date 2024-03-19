@@ -17,6 +17,7 @@ import {
 import { MessagePayload, MessageType, WebsocketMessage } from '@/protobufMessages/WebSocketMessages';
 import { For, Show, createSignal } from 'solid-js';
 import { useAppState } from '@/AppState';
+import { MillionairesError } from '@/protobufMessages/Error';
 
 export default () => {
 	const [runId, setRunId] = createSignal('');
@@ -29,35 +30,53 @@ export default () => {
 	async function startRunTest() {
 		let a = StartRunRequest.create();
 		a.name = name();
-		let res = await (
-			await fetch(START_RUN_ENDPOINT, {
-				method: 'POST',
-				body: StartRunRequest.encode(a).finish(),
-			})
-		).arrayBuffer();
+		let res = await fetch(START_RUN_ENDPOINT, {
+            method: 'POST',
+            body: StartRunRequest.encode(a).finish(),
+        }) ;
 
-		let response = StartRunResponse.decode(new Uint8Array(res));
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(new Uint8Array(await res.arrayBuffer()));
+            console.log(response);
+            return;
+        }
+
+		let response = StartRunResponse.decode(new Uint8Array(await res.arrayBuffer()));
 		console.log(response);
 		setRunId(response.runId);
 	}
 	async function endRunTest() {
 		let request = EndRunRequest.create();
 		request.runId = runId();
-		let res = await (
-			await fetch(END_RUN_ENDPOINT, {
-				method: 'POST',
-				body: EndRunRequest.encode(request).finish(),
-			})
-		).arrayBuffer();
+		let res = await fetch(END_RUN_ENDPOINT, {
+            method: 'POST',
+            body: EndRunRequest.encode(request).finish(),
+        });
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
 
-		let response = EndRunResponse.decode(new Uint8Array(res));
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return;
+        }
+
+		let response = EndRunResponse.decode(resArrayBuf);
 		console.log(response);
 	}
 	async function getRunsTest() {
 		let res = await fetch(GET_RUNS_ENDPOINT);
-		let resUint8 = new Uint8Array(await res.arrayBuffer());
-		let resDecoded = GetRunsResponse.decode(resUint8);
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
 
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return;
+        }
+
+		let resDecoded = GetRunsResponse.decode(resArrayBuf);
 		console.log(resDecoded);
 	}
 
@@ -70,9 +89,16 @@ export default () => {
 			body: AnswerQuestionRequest.encode(request).finish(),
 		});
 
-		let resUint8 = new Uint8Array(await res.arrayBuffer());
-		let resDecoded = AnswerQuestionResponse.decode(resUint8);
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
 
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return;
+        }
+
+		let resDecoded = AnswerQuestionResponse.decode(resArrayBuf);
 		console.log(resDecoded);
 	}
 
@@ -81,14 +107,21 @@ export default () => {
 		let a = UseLifelineRequest.create();
 		a.runSnowflakeId = runId();
 		a.lifeline = lifeline();
-		let res = await (
-			await fetch(USE_LIFELINE_ENDPOINT, {
-				method: 'POST',
-				body: UseLifelineRequest.encode(a).finish(),
-			})
-		).arrayBuffer();
+		let res = await fetch(USE_LIFELINE_ENDPOINT, {
+            method: 'POST',
+            body: UseLifelineRequest.encode(a).finish(),
+        });
 
-		let response = UseLifelineResponse.decode(new Uint8Array(res));
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
+
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return;
+        }
+
+		let response = UseLifelineResponse.decode(resArrayBuf);
 		console.log(response);
 	}
 

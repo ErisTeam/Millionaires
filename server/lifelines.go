@@ -71,7 +71,7 @@ func useLifeline(ctx *fiber.Ctx) error {
 		return c_error(ctx, fmt.Sprintf("Error while getting current run question id of a run with id `%d`. Reason: `%s`", runId.RawSnowflake, err), fiber.ErrInternalServerError.Code)
 	}
 
-	logger.Printf("Using a lifeline for a run with id `%d`", runId.RawSnowflake)
+	loggerInfo.Printf("Using a lifeline for a run with id `%d`", runId.RawSnowflake)
 
 	response := protobufMessages.UseLifelineResponse{}
 	lifeline := LlUnknown
@@ -81,7 +81,7 @@ func useLifeline(ctx *fiber.Ctx) error {
 	case protobufMessages.Lifeline_fiftyFifty:
 		{
 			lifeline = LlFiftyFifty
-			logger.Printf("status is %d %d", lifelinesStatus, int(lifeline))
+			loggerInfo.Printf("status is %d %d", lifelinesStatus, int(lifeline))
 			wasLifelineUsed = (lifelinesStatus & int(lifeline)) == int(lifeline)
 			discarded_answers := []*protobufMessages.Answer{}
 
@@ -140,18 +140,18 @@ func useLifeline(ctx *fiber.Ctx) error {
 	}
 
 	if lifeline == LlUnknown {
-		logger.Printf("A lifeline of type `%s` was detected for a run with id `%d`", lifelineAsString(lifeline), runId.RawSnowflake)
+		loggerInfo.Printf("A lifeline of type `%s` was detected for a run with id `%d`", lifelineAsString(lifeline), runId.RawSnowflake)
 		return ctx.Status(http.StatusBadRequest).Send(out)
 	} else {
 		if wasLifelineUsed {
-			logger.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Rejected)", lifelineAsString(lifeline), runId.RawSnowflake)
+			loggerInfo.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Rejected)", lifelineAsString(lifeline), runId.RawSnowflake)
 		} else {
 			_, err = db.Exec("INSERT INTO run_lifelines (id, run_question_id, used_lifelines) VALUES (NULL, ?, ?);", runQuestionIdInt, lifelinesStatus+int(lifeline))
 			if err != nil {
 				return c_error(ctx, fmt.Sprintf("Error while trying to update the runs' state: `%s`", err.Error()), fiber.ErrBadRequest.Code)
 			}
 
-			logger.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Accepted)", lifelineAsString(lifeline), runId.RawSnowflake)
+			loggerInfo.Printf("A lifeline of type `%s` was succesfully proccessed for a run with id `%d` (Accepted)", lifelineAsString(lifeline), runId.RawSnowflake)
 		}
 	}
 

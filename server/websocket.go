@@ -345,7 +345,7 @@ func WebsocketRun(conn *websocket.Conn) {
 		}
 		switch protoMsg.Type {
 		case protobufMessages.MessageType_Heartbeat:
-			logger.Println("Heartbeat Received")
+			loggerInfo.Println("Heartbeat Received")
 			heartBeatTimer.Reset(heartBeatTimerValue)
 			msg, err := proto.Marshal(&protobufMessages.WebsocketMessage{Type: protobufMessages.MessageType_HeartbeatResponse})
 			if err != nil {
@@ -372,7 +372,7 @@ func WebsocketRun(conn *websocket.Conn) {
 				break
 			}
 
-			logger.Println("Identifying client with run id: ", runId.RawSnowflake)
+			loggerInfo.Println("Identifying client with run id: ", runId.RawSnowflake)
 			row := clientManager.dbConnection.QueryRow("SELECT ended FROM runs WHERE snowflake_id = ?", runId.RawSnowflake)
 
 			var ended bool
@@ -390,7 +390,7 @@ func WebsocketRun(conn *websocket.Conn) {
 				break
 			}
 
-			logger.Println("Identified client with run id: ", runId)
+			loggerInfo.Println("Identified client with run id: ", runId)
 
 			clientManager.identifyClient(conn, runId)
 
@@ -414,7 +414,7 @@ func WebsocketRun(conn *websocket.Conn) {
 				conn.WritePreparedMessage(noIdentifiedResponse)
 				break
 			}
-			logger.Println("Call response: ", msg.Accepted)
+			loggerInfo.Println("Call response: ", msg.Accepted)
 
 			var target = clientManager.clients[*currentClient.target]
 			if target == nil {
