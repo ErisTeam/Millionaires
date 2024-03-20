@@ -21,6 +21,7 @@ export default function Game() {
 	const AppState = useAppState();
 
 	const [overlay, setOverlay] = createStore<(LifeLineType | 'FriendCalling')[]>([]);
+	const [disableProgressTracker, setDisableProgressTracker] = createSignal(false);
 
 	//Doesnt need onMount cause it should run before the component is rendered
 	//shouldShow prevents an error on ?.question
@@ -127,6 +128,7 @@ export default function Game() {
 				prev.splice(prev.indexOf('FriendCall'), 1);
 			}),
 		);
+		setDisableProgressTracker(false);
 	}
 
 	AppState.websocket.onCall.subscribe(onCall);
@@ -193,6 +195,7 @@ export default function Game() {
 						classList={{
 							[style.publicsChoice]: overlay.includes('PublicChoice'),
 							[style.friendCall]: overlay.includes('FriendCall'),
+							[style.fill]: AppState.websocket.currentCall.side == 'callee',
 							[style.friendCalling]: overlay.includes('FriendCalling'),
 							[style.hide]: overlay.length == 0,
 						}}
@@ -220,6 +223,7 @@ export default function Game() {
 											prev.acceped = true;
 										}),
 									);
+									setDisableProgressTracker(true);
 								}}
 							/>
 						</Show>
@@ -227,6 +231,7 @@ export default function Game() {
 				</div>
 			</main>
 			<ProgressTracker
+				disabled={disableProgressTracker()}
 				onLifeLineUse={(lifeline, res) => {
 					let l: LifeLineType | null = null;
 					switch (lifeline) {

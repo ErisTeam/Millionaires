@@ -49,6 +49,11 @@
 			padding-right: 1em;
 			height: 60%;
 			/* padding-bottom: 10em; */
+			&.fill {
+				justify-content: center;
+				align-items: center;
+				height: 100%;
+			}
 		}
 		&.friendCalling {
 			justify-content: center;

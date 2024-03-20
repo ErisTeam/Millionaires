@@ -26,9 +26,15 @@ export default function ProgressTracker(props: ProgressTrackerProps) {
 		easing: 'ease-in-out',
 	});
 	return (
-		<div class={style.progressTracker}>
+		<div
+			class={style.progressTracker}
+			classList={{
+				[style.disabled]: props.disabled,
+			}}
+		>
 			<section class={style.lifeLinesContainer}>
 				<button
+					disabled={props.disabled}
 					class={style.lifeLine}
 					onclick={() => {
 						AppState.useLifeLine(Lifeline.audience).then((res) => {
@@ -59,6 +65,7 @@ export default function ProgressTracker(props: ProgressTrackerProps) {
 					<IconShieldHalfFilled />
 				</button>
 				<button
+					disabled={props.disabled}
 					class={style.lifeLine}
 					onclick={() => {
 						AppState.useLifeLine(Lifeline.friendCall).then((res) => {

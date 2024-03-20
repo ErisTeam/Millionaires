@@ -14,6 +14,10 @@
 	width: 100%;
 	height: 100%;
 	font-size: 1.75em;
+
+	&.disabled {
+		filter: grayscale(70%);
+	}
 	.questionList {
 		display: flex;
 
