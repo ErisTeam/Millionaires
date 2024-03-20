@@ -17,7 +17,7 @@ import (
 type Lifeline int
 
 var Weights = [][]int{
-	{80, 10, 5, 5},
+	{8, 2, 1, 1},
 
 	{80, 10, 5, 5},
 
@@ -25,9 +25,10 @@ var Weights = [][]int{
 
 	{70, 10, 5, 5},
 
-	{65, 10, 5, 5},
+	{45, 23, 22, 15},
 
-	{55, 10, 5, 5}}
+	{34, 25, 25, 16},
+}
 
 const (
 	LlUnknown    Lifeline = -1
@@ -61,7 +62,7 @@ func useLifelineRoute(ctx *fiber.Ctx) error {
 		return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to unmarshal request. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
-    loggerInfo.Print(routeFmt("useLifeline", fmt.Sprint("Visited with the following data { ", &request, " }")))
+	loggerInfo.Print(routeFmt("useLifeline", fmt.Sprint("Visited with the following data { ", &request, " }")))
 
 	var db = ctx.Locals("db").(*sql.DB)
 
@@ -102,7 +103,7 @@ func useLifelineRoute(ctx *fiber.Ctx) error {
 			if !wasLifelineUsed {
 				discarded_answers_sql, err := db.Query("SELECT answers.id FROM answers WHERE answers.question_id = (SELECT run_questions.question_id FROM run_questions WHERE run_questions.run_id = ? AND run_questions.answered_at IS NULL ORDER BY run_questions.run_id DESC LIMIT 1) AND answers.is_correct = FALSE ORDER BY RANDOM() LIMIT 2;", runId.RawSnowflake)
 				if err != nil {
-                    return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to get current run question ID of a run with ID `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
+					return c_error(ctx, routeFmt("useLifeline", fmt.Sprintf("Unable to get current run question ID of a run with ID `%d`. Reason: `%s`", runId.RawSnowflake, err)), fiber.ErrInternalServerError.Code)
 				}
 				defer discarded_answers_sql.Close()
 
@@ -157,15 +158,18 @@ func useLifelineRoute(ctx *fiber.Ctx) error {
 					answers = append(answers, &protobufMessages.AudienceResponseItem{Id: strconv.FormatInt(answer, 10)})
 				}
 				percentages := []int32{0, 0, 0, 0}
+
+				maxNumber := Weights[difficulty][0] + Weights[difficulty][1] + Weights[difficulty][2] + Weights[difficulty][3]
+
 				for i := 0; i < 250; i++ {
-					randomNumber := rand.Intn(100)
-					if randomNumber > 100-Weights[difficulty][0] {
+					randomNumber := rand.Intn(maxNumber)
+					if randomNumber > maxNumber-Weights[difficulty][0] {
 						percentages[0]++
-					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1] {
+					} else if randomNumber > maxNumber-Weights[difficulty][0]-Weights[difficulty][1] {
 						percentages[1]++
-					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2] {
+					} else if randomNumber > maxNumber-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2] {
 						percentages[2]++
-					} else if randomNumber > 100-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2]-Weights[difficulty][3] {
+					} else if randomNumber > maxNumber-Weights[difficulty][0]-Weights[difficulty][1]-Weights[difficulty][2]-Weights[difficulty][3] {
 						percentages[3]++
 					}
 
