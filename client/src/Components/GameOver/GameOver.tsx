@@ -4,6 +4,7 @@ import { useAppState } from '@/AppState';
 import HexagonButton from '@/Components/HexagonButton/HexagonButton';
 import { useNavigate } from '@solidjs/router';
 import Popup from '../Popup/Popup';
+import { IconDoorExit, IconSend } from '@tabler/icons-solidjs';
 
 export default function GameOver() {
 	const AppState = useAppState();
@@ -15,7 +16,7 @@ export default function GameOver() {
 		return false;
 	});
 
-	const [showFeadBackPopup, setShowFeadBackPopup] = createSignal(false);
+	const [showFeedbackPopup, setShowFeedbackPopup] = createSignal(false);
 	return (
 		<div class={style.GameOver}>
 			<h3 classList={{ [style.success]: didComplete() }}>Koniec Gry</h3>
@@ -23,7 +24,7 @@ export default function GameOver() {
 			<span>Twój wynik to: {NaN}</span>
 			<HexagonButton
 				onClick={() => {
-					setShowFeadBackPopup(true);
+					setShowFeedbackPopup(true);
 				}}
 			>
 				<span>Podziel się opinią</span>
@@ -37,11 +38,17 @@ export default function GameOver() {
 			>
 				<span>Strona Główna</span>
 			</HexagonButton>
-			<Popup show={showFeadBackPopup()}>
-				<textarea cols="30" rows="10"></textarea>
-				<div>
-					<button>Wyślij</button>
-					<button>Zamknij</button>
+			<Popup show={showFeedbackPopup()}>
+				<div class={style.feedback}>
+					<textarea class={style.popupInput} cols="30" rows="10" placeholder="tekst"></textarea>
+					<div class={style.controls}>
+						<button onclick={() => {}}>
+							<IconSend />
+						</button>
+						<button onclick={() => setShowFeedbackPopup(false)}>
+							<IconDoorExit />
+						</button>
+					</div>
 				</div>
 			</Popup>
 		</div>

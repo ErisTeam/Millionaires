@@ -101,5 +101,7 @@ func main() {
 
 	app.Get("/ws/", websocket.New(WebsocketRun))
 
+	app.Post("/sendFeedback", sendFeedbackRoute)
+
 	log.Fatal(app.Listen(":9090"))
 }

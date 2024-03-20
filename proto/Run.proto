@@ -38,3 +38,9 @@ message EndRunResponse {
 message GetRunsResponse {
     repeated EndedRunStat runs = 1;
 }
+
+
+message SendFeedback{
+    string runId = 1;
+    string message = 2;
+}

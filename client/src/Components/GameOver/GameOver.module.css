@@ -39,3 +39,61 @@
 		scale: 0.75;
 	}
 }
+
+.feedback {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	.popupInput {
+		transition: border 500ms;
+		outline: none;
+
+		border: 3px solid var(--secondary-500);
+		border-radius: 10px;
+		background-color: var(--primary-800);
+		padding: 0.25em;
+		width: 100%;
+		height: 10em;
+		resize: none;
+
+		&::placeholder {
+			opacity: 0.7;
+			color: var(--accent-100);
+		}
+		&:focus {
+			border-color: var(--accent-200);
+		}
+	}
+	.controls {
+		display: flex;
+		flex-direction: row;
+		align-content: space-between;
+		gap: 0.5em;
+		> button {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			transition: 200ms border;
+			cursor: pointer;
+			outline: none;
+			border: 2px solid var(--secondary-500);
+
+			border-radius: 10px;
+			background-color: transparent;
+			padding: 0.5em;
+			width: 10em;
+			height: 2em;
+
+			> svg {
+				stroke: white;
+				transition: 500ms stroke;
+			}
+			&:hover {
+				border-color: var(--secondary-300);
+				> svg {
+					stroke: var(--accent-200);
+				}
+			}
+		}
+	}
+}

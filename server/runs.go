@@ -293,3 +293,22 @@ func endRunRoute(ctx *fiber.Ctx) error {
 	loggerInfo.Println(routeFmt("endRun", fmt.Sprintf("Succesfully ended a run with id `%d`.", runId.RawSnowflake)))
 	return ctx.Status(http.StatusOK).Send(out)
 }
+
+func sendFeedbackRoute(ctx *fiber.Ctx) error {
+	ctx.Set("Content-Type", "application/vnd.google.protobuf")
+
+	var db = ctx.Locals("db").(*sql.DB)
+	request := protobufMessages.SendFeedback{}
+	err := proto.Unmarshal(ctx.Body(), &request)
+	if err != nil {
+		c_error(ctx, routeFmt("sendFeedback", "Wrong request data"), fiber.ErrTeapot.Code)
+	}
+
+	row, err := db.Query("INSERT INTO feedback (player_id,message,run_id) VALUES ((SELECT player_id FROM players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ?),?,?)", request.RunId, request.Message, request.RunId)
+	if err != nil {
+		c_error(ctx, routeFmt("sendFeedback", "Failed to insert data"), fiber.ErrTeapot.Code)
+	}
+	defer row.Close()
+
+	return ctx.Status(http.StatusOK).Send(nil)
+}

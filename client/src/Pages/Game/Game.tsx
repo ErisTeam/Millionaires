@@ -149,6 +149,7 @@ export default function Game() {
 			<main class={style.game}>
 				<div class={style.ai}>
 					<div class={style.host}>
+						TUTAJ BĘDZIE HOST :3
 						{/* <iframe
 							style={{
 								'pointer-events': 'none',

@@ -17,8 +17,6 @@
 	grid-template-areas: 'ai' 'question';
 	z-index: 1;
 
-	/* background: url('../assets/backgroundnumbers.png'); */
-
 	background: var(--background-900);
 
 	padding-bottom: 2em;

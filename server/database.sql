@@ -56,3 +56,10 @@ CREATE TABLE IF NOT EXISTS run_lifelines (
     used_lifelines INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (run_question_id) REFERENCES run_question(id)
 );
+
+CREATE TABLE IF NOT EXISTS feedback(
+    id INTEGER UNIQUE NOT NULL PRIMARY KEY AUTOINCREMENT,
+    player_id INTEGER NOT NULL,
+    run_id INTEGER NOT NULL,
+    message VARCHAR(255) NOT NULL,
+);

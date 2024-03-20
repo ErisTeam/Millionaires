@@ -4,6 +4,7 @@ import postcss_nested from 'postcss-nested';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import solid from 'vite-plugin-solid';
 import devtools from 'solid-devtools/vite';
+import { resolve } from 'path';
 export default defineConfig({
 	plugins: [
 		tsconfigPaths(),
@@ -19,5 +20,13 @@ export default defineConfig({
 	},
 	server: {
 		port: 3000,
+	},
+	build: {
+		rollupOptions: {
+			input: {
+				main: resolve(__dirname, 'index.html'),
+				game: resolve(__dirname, 'index.html'),
+			},
+		},
 	},
 });
