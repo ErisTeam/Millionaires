@@ -304,11 +304,23 @@ func sendFeedbackRoute(ctx *fiber.Ctx) error {
 		c_error(ctx, routeFmt("sendFeedback", "Wrong request data"), fiber.ErrTeapot.Code)
 	}
 
-	row, err := db.Query("INSERT INTO feedback (player_id,message,run_id) VALUES ((SELECT player_id FROM players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ?),?,?)", request.RunId, request.Message, request.RunId)
+	// check if runid Exists in db
+	row, err := db.Query("SELECT * FROM runs WHERE snowflake_id = ?", request.RunId)
+	if err != nil {
+		c_error(ctx, routeFmt("sendFeedback", "Failed to check if run exists"), fiber.ErrTeapot.Code)
+	}
+	defer row.Close()
+	if !row.Next() {
+		c_error(ctx, routeFmt("sendFeedback", "Run doesn't exist"), fiber.ErrTeapot.Code)
+	}
+
+	row, err = db.Query("INSERT INTO feedback (player_id,message,run_id) VALUES ((SELECT player_id FROM players JOIN runs on runs.player_id = players.snowflake_id WHERE runs.snowflake_id = ?),?,?)", request.RunId, request.Message, request.RunId)
 	if err != nil {
 		c_error(ctx, routeFmt("sendFeedback", "Failed to insert data"), fiber.ErrTeapot.Code)
 	}
 	defer row.Close()
+
+	println(routeFmt("sendFeedback", "Feedback sent"))
 
 	return ctx.Status(http.StatusOK).Send(nil)
 }
