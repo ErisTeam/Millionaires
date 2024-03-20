@@ -85,3 +85,7 @@ func snowflakeFromString(input string) (Snowflake, error) {
 	i, err := strconv.ParseInt(input, 10, 64)
 	return snowflakeFromInt(i), err
 }
+
+func snowflakeIntToTimestamp(input int64) int64 {
+	return ((input >> (TYPE_BITS + BATCH_BITS)) + epoch)
+}
