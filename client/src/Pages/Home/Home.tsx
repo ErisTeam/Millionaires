@@ -52,9 +52,13 @@ export default function StartPage() {
 				navigate('/game');
 			})
 			.catch((e) => {
-				console.error(e);
+				console.error(e, typeof e);
+				if (typeof e == 'string') {
+					setPopupText(e);
+				} else {
+					setPopupText('Nie mozna polaczyc z serwerem');
+				}
 				setShowPopup(true);
-				setPopupText('Nie mozna polaczyc z serwerem');
 			});
 	}
 
@@ -82,7 +86,7 @@ export default function StartPage() {
 				</ol>
 			</LeaderboardStateProvider>
 
-			<Popup hide={!showPopup()}>
+			<Popup show={showPopup()}>
 				<h2>{popupText()}</h2>
 				<HexagonButton
 					class={style.popupButton}

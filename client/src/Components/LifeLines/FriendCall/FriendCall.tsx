@@ -2,11 +2,10 @@ import style from './FriendCall.module.css';
 import line from '../LifeLine.module.css';
 import { IconPhoneOff } from '@tabler/icons-solidjs';
 import Hexagon from '@/Components/Hexagon/Hexagon';
-import { For, Show, createEffect, createSignal, onCleanup } from 'solid-js';
+import { For, Show, createSignal, onCleanup } from 'solid-js';
 import { useAppState } from '@/AppState';
 
-interface FriendCallProps {}
-export default (props: FriendCallProps) => {
+export default () => {
 	const appState = useAppState();
 	const [showTimeLeft, setShowTimeLeft] = createSignal(false);
 	const [timeLeft, setTimeLeft] = createSignal(45);
@@ -22,7 +21,7 @@ export default (props: FriendCallProps) => {
 			setShowTimeLeft(false);
 		}, 1000);
 
-		showInterval = setTimeout(a, 1000);
+		showInterval = setTimeout(a, timeLeft() / 2);
 	};
 	let showInterval: number | undefined = undefined;
 

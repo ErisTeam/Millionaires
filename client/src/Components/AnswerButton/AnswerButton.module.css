@@ -6,6 +6,9 @@
 	.correct {
 		--blink-color: green;
 	}
+	.wrong {
+		--blink-color: red;
+	}
 }
 .answerButton:not(:disabled):hover {
 	.hexagon {

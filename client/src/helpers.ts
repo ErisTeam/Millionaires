@@ -1,4 +1,5 @@
 import { ANSWER_QUESTION_ENDPOINT, START_RUN_ENDPOINT, USE_LIFELINE_ENDPOINT } from './constants';
+import { MillionairesError } from './protobufMessages/Error';
 import { Lifeline, UseLifelineRequest, UseLifelineResponse } from './protobufMessages/Lifelines';
 import { AnswerQuestionRequest, AnswerQuestionResponse } from './protobufMessages/Questions';
 import { StartRunRequest, StartRunResponse } from './protobufMessages/Run';
@@ -6,14 +7,18 @@ import { StartRunRequest, StartRunResponse } from './protobufMessages/Run';
 export async function startRun(name: string): Promise<StartRunResponse> {
 	let a = StartRunRequest.create();
 	a.name = name;
-	let res = await (
-		await fetch(START_RUN_ENDPOINT, {
-			method: 'POST',
-			body: StartRunRequest.encode(a).finish(),
-		})
-	).arrayBuffer();
+	const res = await fetch(START_RUN_ENDPOINT, {
+		method: 'POST',
+		body: StartRunRequest.encode(a).finish(),
+	});
 
-	let response = StartRunResponse.decode(new Uint8Array(res));
+	const payload = await res.arrayBuffer();
+	console.log(res.status);
+	if (res.status >= 400) {
+		const response = MillionairesError.decode(new Uint8Array(payload));
+		throw response.message;
+	}
+	const response = StartRunResponse.decode(new Uint8Array(payload));
 	console.log(response);
 	return response;
 }
@@ -41,6 +46,12 @@ export async function useLifeLineRequest(runId: string, type: Lifeline) {
 		body: UseLifelineRequest.encode(request).finish(),
 	});
 	let resUint8 = new Uint8Array(await res.arrayBuffer());
+
+	if (res.status != 200) {
+		console.log(MillionairesError.decode(resUint8));
+		return;
+	}
+
 	let resDecoded = UseLifelineResponse.decode(resUint8);
 
 	return resDecoded;

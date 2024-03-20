@@ -16,7 +16,7 @@ export default function HostTalks() {
 			</button>
 			<For each={output}>
 				{(char, index) => (
-					<span key={index()} class={style.letter} style={{ animationDelay: `${index() * 1}s` } as any}>
+					<span id={index().toString()} class={style.letter} style={{ animationDelay: `${index() * 1}s` } as any}>
 						{char}
 					</span>
 				)}

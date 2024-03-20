@@ -1,7 +1,7 @@
 import { JSXElement, createContext, createSignal, useContext } from 'solid-js';
 import { Locale } from './Translation';
 import { GetQuestionResponse } from './protobufMessages/Questions';
-import { acceptCall, connect, createEvent, endCall, sendMessage } from './websocket';
+import { acceptCall, createEvent, endCall, sendMessage } from './websocket';
 import { Lifeline } from './protobufMessages/Lifelines';
 import { useLifeLineRequest } from './helpers';
 import { MessagePayload, MessageType, WebsocketMessage } from './protobufMessages/WebSocketMessages';
@@ -47,6 +47,8 @@ async function useLifeLine(lifeLine: Lifeline) {
 		throw 'run id is not set';
 	}
 	const response = await useLifeLineRequest(runID() as string, lifeLine);
+	if (!response) {
+	}
 	setLifeLines((prev) => {
 		console.log(prev, 'prev');
 		let newState = { ...prev };

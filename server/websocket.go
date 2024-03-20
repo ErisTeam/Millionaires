@@ -73,9 +73,9 @@ func (c *WebSocketClientManager) GetRandomClient() (Snowflake, *WebSocketClientS
 
 func (c *WebSocketClientManager) GetRandomClientExcludeSlice(exclude []Snowflake) (Snowflake, *WebSocketClientState) {
 	randomKey, state := c.GetRandomClient()
-	var checkIfContains = func(s Snowflake, slice []Snowflake) bool {
-		for _, s := range exclude {
-			if s == randomKey {
+	var checkIfContains = func(sn Snowflake, slice []Snowflake) bool {
+		for _, s := range slice {
+			if s == sn {
 				return true
 			}
 		}

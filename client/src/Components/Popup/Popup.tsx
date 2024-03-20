@@ -1,13 +1,13 @@
 import { Portal } from 'solid-js/web';
 
 import style from './Popup.module.css';
-import { JSX, Show, createEffect, createSignal, onMount } from 'solid-js';
+import { JSX, createSignal } from 'solid-js';
 
 interface PopupProps {
 	containerClass?: string;
 	popupClass?: string;
 	children: JSX.Element | JSX.Element[];
-	hide?: boolean;
+	show?: boolean;
 }
 export default (props: PopupProps) => {
 	const [firstRender, setFirstRender] = createSignal(false);
@@ -20,8 +20,8 @@ export default (props: PopupProps) => {
 				class={style.container}
 				style={{ visibility: firstRender() ? 'visible' : 'hidden' }}
 				classList={{
-					[style.hide]: props.hide,
-					[style.show]: !props.hide,
+					[style.hide]: !props.show,
+					[style.show]: props.show,
 				}}
 			>
 				<article class={style.popup}>{props.children}</article>

@@ -3,7 +3,7 @@ import style from './Game.module.css';
 import ProgressTracker from '@/Components/ProgressTracker/ProgressTracker';
 import AnswerButton from '@/Components/AnswerButton/AnswerButton';
 import Question from '@/Components/Question/Question';
-import { For, Match, Show, Switch, createSignal, onCleanup, onMount } from 'solid-js';
+import { For, Show, createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { LifeLineType, useAppState } from '@/AppState';
 import { Question as QuestionT } from '@/protobufMessages/Questions';
@@ -12,25 +12,10 @@ import ConfirmationModal from '@/Components/ConfirmationModal/ConfirmationModal'
 import PublicChoice from '@/Components/LifeLines/PuBlIcChOiCe/PublicChoice';
 import FriendCall from '@/Components/LifeLines/FriendCall/FriendCall';
 import FriendCalling from '@/Components/LifeLines/FriendCalling/FriendCalling';
-import { AudienceResponse, AudienceResponseItem, FiftyFiftyResponse, Lifeline } from '@/protobufMessages/Lifelines';
-import { EndRunRequest, EndRunResponse } from '@/protobufMessages/Run';
-import { END_RUN_ENDPOINT } from '@/constants';
+import { AudienceResponseItem, Lifeline } from '@/protobufMessages/Lifelines';
 import { createStore, produce } from 'solid-js/store';
 
-const AnswerAnimationTimeout = 2000;
-async function finishRun(runId: string) {
-	let request = EndRunRequest.create();
-	request.runId = runId;
-	let res = await (
-		await fetch(END_RUN_ENDPOINT, {
-			method: 'POST',
-			body: EndRunRequest.encode(request).finish(),
-		})
-	).arrayBuffer();
-
-	let response = EndRunResponse.decode(new Uint8Array(res));
-	console.log(response);
-}
+const AnswerAnimationTimeout = 1000;
 export default function Game() {
 	const navigate = useNavigate();
 	const AppState = useAppState();
@@ -45,7 +30,15 @@ export default function Game() {
 	}
 
 	const [selectedAnswerId, setSelectedAnswerId] = createSignal<number | undefined>(undefined);
-	const [correctAnswerAnimation, setCorrectAnswerAnimation] = createSignal<boolean>(false);
+	const [AnswerAnimation, setAnswerAnimation] = createStore<{
+		answeringStart: number;
+		timeout: number;
+		result: undefined | 'wrong' | 'correct';
+	}>({
+		answeringStart: Date.now(),
+		timeout: 2000,
+		result: undefined,
+	});
 	const [confirmed, setConfirmed] = createSignal(false);
 	const [disabledAnswers, setDisabledAnswers] = createSignal<number[]>([]);
 	const [audienceVotes, setAudienceVotes] = createSignal<AudienceResponseItem[]>([]);
@@ -63,6 +56,8 @@ export default function Game() {
 		if (result) {
 			setConfirmed(true);
 			console.log(selectedAnswerId());
+
+			const timeout = AnswerAnimationTimeout; //Math.max(Math.min(5000, AnswerAnimation.answeringStart - Date.now() / 4), AnswerAnimationTimeout);
 
 			setOverlay([]);
 
@@ -89,21 +84,26 @@ export default function Game() {
 						navigate('/results');
 						return;
 					}
-					setCorrectAnswerAnimation(true);
+					setAnswerAnimation(produce((prev) => (prev.result = 'correct')));
 					setTimeout(() => {
 						AppState.setCurrentQuestion(result!.nextQuestion);
 						setSelectedAnswerId(undefined);
 						setConfirmed(false);
-						setCorrectAnswerAnimation(false);
-					}, AnswerAnimationTimeout / 2);
+						setAnswerAnimation(
+							produce((prev) => {
+								prev.answeringStart = Date.now();
+								prev.result = undefined;
+							}),
+						);
+					}, 1000);
 				} else {
-					alert('Zle');
-					navigate('/results');
-					setSelectedAnswerId(undefined);
-					setConfirmed(false);
-					setCorrectAnswerAnimation(false);
+					setAnswerAnimation(produce((prev) => (prev.result = 'wrong')));
+					console.log('Wrong');
+					setTimeout(() => {
+						navigate('/results');
+					}, 1000);
 				}
-			}, AnswerAnimationTimeout / 2);
+			}, timeout);
 		} else {
 			setSelectedAnswerId(undefined);
 		}
@@ -165,17 +165,18 @@ export default function Game() {
 					<Question question={AppState.currentQuestion()?.question as QuestionT} />
 					<ol class={style.answers}>
 						<For each={AppState.currentQuestion()?.answers}>
-							{(answer) => {
+							{(answer, index) => {
 								return (
 									<li>
 										<AnswerButton
 											zIndex={2}
 											disabled={confirmed() == true || disabledAnswers().includes(answer.id)}
 											selected={selectedAnswerId() == answer.id && confirmed() == true}
-											correct={correctAnswerAnimation()}
+											status={AnswerAnimation.result}
 											onClick={(_) => {
 												setSelectedAnswerId(answer.id);
 											}}
+											letter={String.fromCharCode('A'.charCodeAt(0) + index()) + ':'}
 											answer={answer}
 										/>
 									</li>

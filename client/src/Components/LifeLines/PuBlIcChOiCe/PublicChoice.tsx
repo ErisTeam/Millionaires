@@ -5,19 +5,6 @@ import { Index, createSignal, onMount } from 'solid-js';
 import { AudienceResponseItem } from '@/protobufMessages/Lifelines';
 import { useAppState } from '@/AppState';
 
-function weightedRandom(weights: number[]) {
-	let cumulativeWeights: number[] = [];
-	for (let i = 0; i < weights.length; i++) {
-		cumulativeWeights.push(weights[i] + (cumulativeWeights[i - 1] || 0));
-	}
-	const random = Math.random() * cumulativeWeights[cumulativeWeights.length - 1];
-	for (let i = 0; i < weights.length; i++) {
-		if (cumulativeWeights[i] >= random) {
-			return i;
-		}
-	}
-	return -1;
-}
 type PublicChoiceProps = {
 	finalPercentages: AudienceResponseItem[];
 };
@@ -27,7 +14,6 @@ export default (props: PublicChoiceProps) => {
 
 	onMount(() => {
 		let iters = 0;
-		// randomize percentages
 		let interv = setInterval(() => {
 			if (iters > 20) {
 				clearInterval(interv);

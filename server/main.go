@@ -27,11 +27,11 @@ var loggerError = log.New(os.Stdout, "[\033[31mERROR\033[0m]: ", log.Ldate|log.L
 func c_error(c *fiber.Ctx, message string, status_code int) error {
 	loggerError.Println(message)
 
-    errorResponse := protobufMessages.MillionairesError{ Message: message, Where: "Wouldn't you like to know? UwU" }
+	errorResponse := protobufMessages.MillionairesError{Message: message, Where: "Wouldn't you like to know? UwU"}
 	out, err := proto.Marshal(&errorResponse)
 
 	if err != nil {
-        loggerError.Printf("Unable to encode `MillionairesError` response as bytes. Reason: `%s`", err)
+		loggerError.Printf("Unable to encode `MillionairesError` response as bytes. Reason: `%s`", err)
 		return fiber.ErrInternalServerError
 	}
 
@@ -73,6 +73,8 @@ func main() {
 		c.Locals("clientManager", &clientManager)
 		return c.Next()
 	})
+
+	app.Static("/", "./../client/dist")
 
 	app.Use(func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {

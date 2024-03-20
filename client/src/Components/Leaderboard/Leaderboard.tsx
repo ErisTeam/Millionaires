@@ -5,7 +5,7 @@ import { useLeaderboardState } from './LeaderboardContext';
 import { IconAward } from '@tabler/icons-solidjs';
 export default function Leaderboard() {
 	const state = useLeaderboardState();
-	const [parent, setEnabled] = createAutoAnimate({
+	const [parent] = createAutoAnimate({
 		// Animation duration in milliseconds (default: 250)
 		duration: 250,
 		// Easing for motion (default: 'ease-in-out')
