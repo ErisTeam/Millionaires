@@ -88,6 +88,7 @@ func main() {
 
 	app.Post("/startRun", startRunRoute)
 	app.Get("/getRuns", getRunsRoute)
+	app.Post("/getRunScore", getRunScoreRoute)
 	app.Post("/endRun", endRunRoute)
 	app.Post("/useLifeline", useLifelineRoute)
 

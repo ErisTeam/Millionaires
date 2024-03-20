@@ -1,0 +1,12 @@
+syntax = "proto3";
+option go_package = "protobufMessages/";
+
+package millionaires.Statistics;
+
+message getRunScoreRequest {
+    string runSnowflakeId = 1;
+}
+
+message getRunScoreResponse {
+    int32 points = 1;
+}

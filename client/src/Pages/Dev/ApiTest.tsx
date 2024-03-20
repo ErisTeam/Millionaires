@@ -5,6 +5,7 @@ import {
 	GET_RUNS_ENDPOINT,
 	END_RUN_ENDPOINT,
 	USE_LIFELINE_ENDPOINT,
+    GET_RUN_SCORE_ENDPOINT,
 } from '../../constants';
 import { AnswerQuestionRequest, AnswerQuestionResponse } from '../../protobufMessages/Questions';
 import {
@@ -18,6 +19,7 @@ import { MessagePayload, MessageType, WebsocketMessage } from '@/protobufMessage
 import { For, Show, createSignal } from 'solid-js';
 import { useAppState } from '@/AppState';
 import { MillionairesError } from '@/protobufMessages/Error';
+import { getRunScoreRequest, getRunScoreResponse } from '@/protobufMessages/Statistics';
 
 export default () => {
 	const [runId, setRunId] = createSignal('');
@@ -124,6 +126,27 @@ export default () => {
 		let response = UseLifelineResponse.decode(resArrayBuf);
 		console.log(response);
 	}
+
+    async function getRunScoreTest() {
+		let request = getRunScoreRequest.create();
+		request.runSnowflakeId = runId();
+		let res = await fetch(GET_RUN_SCORE_ENDPOINT, {
+			method: 'POST',
+			body: getRunScoreRequest.encode(request).finish(),
+		});
+
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
+
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return;
+        }
+
+		let resDecoded = getRunScoreResponse.decode(resArrayBuf);
+		console.log(resDecoded);
+    }
 
 	const [incomingCall, setIncomingCall] = createSignal(false);
 	const [callerName, setCallerName] = createSignal('');
@@ -250,6 +273,14 @@ export default () => {
 					}}
 				>
 					Test Use Lifeline
+				</button>
+				<button
+					onClick={(e) => {
+						e.preventDefault();
+						getRunScoreTest();
+					}}
+				>
+					Test Get Run Score
 				</button>
 				<select
 					value={0}
