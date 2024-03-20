@@ -14,7 +14,8 @@ import (
 var POINTS_FOR_LIFELINES = 70
 var POINTS_FOR_QUESTION = 100
 var POINTS_FOR_QUESTION_DIFFICULTY = 20
-var POINTS_FOR_TIME = 80
+var POINTS_FOR_TIME = 60
+var POINTS_TIME_FUNCTION_HALF = 20
 
 var POINTS_FOR_WIN = 300
 
@@ -28,7 +29,7 @@ type CalculationRunQuestion struct {
 
 /// For each lifeline that was not used the player gets +70 points
 /// For each question answered correctly the player gets +100 points and +20 points multiplied by the difficulty of the question
-/// TODO: Additional points for time (Less time spent on answering gives more points)
+/// Additional points for time (Less time spent on answering gives more points)
 /// Additional +300 points on win
 func calculateRunScore(ctx *fiber.Ctx, runId Snowflake) (int, error) {
 	var db = ctx.Locals("db").(*sql.DB)
@@ -77,13 +78,20 @@ func calculateRunScore(ctx *fiber.Ctx, runId Snowflake) (int, error) {
     // Calculate points for correctly answered questions and their difficulty
     for i:=0; i<len(runQuestions); i++ {
         if runQuestions[i].AnsweredCorrectly {
-            //loggerInfo.Print("Answered at: ", runQuestions[i].AnsweredAt, " snowflake: ", runQuestions[i].RunQuestionId)
+            var timeTaken float64
+            if (i == 0) {
+                timeTaken = float64(runQuestions[i].AnsweredAt.Unix() - (snowflakeIntToTimestamp(runId.RawSnowflake)/1000))
+            } else {
+                timeTaken = float64(runQuestions[i].AnsweredAt.Unix() - runQuestions[i-1].AnsweredAt.Unix())
+            }
 
-            //var timeTaken = runQuestions[i].AnsweredAt.Sub(runQuestions[i].RunQuestionId.Date).Seconds()
-            //loggerInfo.Print("ee", int(((math.Log(20*timeTaken*timeTaken+30)) - 3.5) / 5))
-            //var timePoints = POINTS_FOR_TIME * (1-int(((math.Log(20*timeTaken*timeTaken+30)) - 3.5) / 5))
-            loggerInfo.Printf("Calculating score for a run of ID `%d`. (+%d correctly answered question, +%d question difficulty, +0 time)", runId.RawSnowflake, POINTS_FOR_QUESTION, (POINTS_FOR_QUESTION_DIFFICULTY * (runQuestions[i].Difficulty+1)))
-            points += POINTS_FOR_QUESTION + (POINTS_FOR_QUESTION_DIFFICULTY * (runQuestions[i].Difficulty+1))
+            var timePoints = 0
+            if !(timeTaken > 35) {
+                timePoints = int(float64(POINTS_FOR_TIME) * ((timeTaken + float64(POINTS_TIME_FUNCTION_HALF)*2) / (timeTaken + float64(POINTS_TIME_FUNCTION_HALF)) - 1))
+            } 
+
+            loggerInfo.Printf("Calculating score for a run of ID `%d`. (+%d correctly answered question, +%d question difficulty, +%d time)", runId.RawSnowflake, POINTS_FOR_QUESTION, (POINTS_FOR_QUESTION_DIFFICULTY * (runQuestions[i].Difficulty+1)), timePoints)
+            points += POINTS_FOR_QUESTION + (POINTS_FOR_QUESTION_DIFFICULTY * (runQuestions[i].Difficulty+1)) + timePoints
         }
     }
 

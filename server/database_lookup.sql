@@ -67,7 +67,9 @@ SELECT q.* FROM questions q WHERE q.id NOT IN (SELECT rq.question_id FROM run_qu
 
 
 ---
-SELECT rq.id, rq.question_num, rq.answered_at, (SELECT questions.difficulty FROM questions WHERE rq.question_id = questions.id) AS difficulty, (SELECT answers.is_correct FROM answers WHERE answers.id = rq.answer_id) AS is_correct FROM run_questions rq WHERE rq.run_id = 0 ORDER BY rq.question_num ASC;
+SELECT rq.id, rq.question_num, rq.answered_at, (SELECT questions.difficulty FROM questions WHERE rq.question_id = questions.id) AS difficulty, (SELECT answers.is_correct FROM answers WHERE answers.id = rq.answer_id) AS is_correct FROM run_questions rq WHERE rq.run_id = 152277114110869530 ORDER BY rq.question_num ASC;
 
-SELECT rq.question_num, (SELECT answers.is_correct FROM answers WHERE rq.answer_id = answers.id) AS is_correct FROM run_questions rq JOIN runs ON runs.snowflake_id = rq.run_id WHERE runs.snowflake_id = 0 ORDER BY rq.question_num DESC LIMIT 1;
+SELECT rq.question_num, (SELECT answers.is_correct FROM answers WHERE rq.answer_id = answers.id) AS is_correct FROM run_questions rq JOIN runs ON runs.snowflake_id = rq.run_id WHERE runs.snowflake_id = 152277114110869530 ORDER BY rq.question_num DESC LIMIT 1;
+
+SELECT runs.snowflake_id FROM runs WHERE runs.snowflake_id = 152277114110869530;
 
