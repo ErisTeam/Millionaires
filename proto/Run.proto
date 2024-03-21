@@ -10,6 +10,7 @@ message EndedRunStat {
     string name = 2; 
     int32 usedLifelines = 3;
     bool won = 4;
+    int32 score = 5;
 }
 
 

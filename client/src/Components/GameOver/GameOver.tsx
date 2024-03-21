@@ -5,8 +5,10 @@ import HexagonButton from '@/Components/HexagonButton/HexagonButton';
 import { useNavigate } from '@solidjs/router';
 import Popup from '../Popup/Popup';
 import { IconDoorExit, IconSend } from '@tabler/icons-solidjs';
-import { SEND_FEEDBACK_ENDPOINT } from '@/constants';
+import { GET_RUN_SCORE_ENDPOINT, SEND_FEEDBACK_ENDPOINT } from '@/constants';
 import { SendFeedback } from '@/protobufMessages/Run';
+import { getRunScoreRequest, getRunScoreResponse } from '@/protobufMessages/Statistics';
+import { MillionairesError } from '@/protobufMessages/Error';
 
 export default function GameOver() {
 	const AppState = useAppState();
@@ -18,15 +20,43 @@ export default function GameOver() {
 		return false;
 	});
 
+    async function getScore(): Promise<Number> {
+		let request = getRunScoreRequest.create();
+        let runId = AppState.runID();
+        if (runId == undefined) {
+            console.error("Error while fetching score. No run ID.")
+            return 0;
+        }
+		request.runSnowflakeId = runId;
+		let res = await fetch(GET_RUN_SCORE_ENDPOINT, {
+			method: 'POST',
+			body: getRunScoreRequest.encode(request).finish(),
+		});
+
+        let resArrayBuf = new Uint8Array(await res.arrayBuffer());
+
+        // Error
+        if (res.status >= 400) {
+            let response = MillionairesError.decode(resArrayBuf);
+            console.log(response);
+            return 0;
+        }
+
+		let resDecoded = getRunScoreResponse.decode(resArrayBuf);
+		console.log("Run points: ", resDecoded);
+        return resDecoded.points;
+    }
+
 	const [showFeedbackPopup, setShowFeedbackPopup] = createSignal(false);
 	const [feedbackMessage, setFeedbackMessage] = createSignal('');
 	const [feedbackSent, setFeedbackSent] = createSignal(false);
+    const [score] = createResource(getScore)
 
 	return (
 		<div class={style.GameOver}>
 			<h3 classList={{ [style.success]: didComplete() }}>Koniec Gry</h3>
 			<span>Gratulujemy {AppState.username()},</span>
-			<span>Twój wynik to: {NaN}</span>
+			<span>Twój wynik to: {(score() ?? 0).toString()}</span>
 			<HexagonButton
 				disabled={feedbackSent()}
 				onClick={() => {

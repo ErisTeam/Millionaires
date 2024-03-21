@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"millionairesServer/protobufMessages"
 	"strconv"
@@ -18,6 +19,8 @@ var POINTS_FOR_TIME = 60
 var POINTS_TIME_FUNCTION_HALF = 20
 
 var POINTS_FOR_WIN = 300
+
+var ERROR_CALCULATING_SCORE = errors.New("Unable to calculate the score.")
 
 type CalculationRunQuestion struct {
     RunQuestionId Snowflake
@@ -103,6 +106,26 @@ func calculateRunScore(ctx *fiber.Ctx, runId Snowflake) (int, error) {
 
     loggerInfo.Printf("Calculated score for a run of ID `%d` to be `%d`. (`%d`)", runId.RawSnowflake, points, usedLifelines)
     return points, nil
+}
+
+func calculateFinalRunScore(ctx *fiber.Ctx, runId Snowflake) (int, error) {
+	var db = ctx.Locals("db").(*sql.DB)
+
+    score, err := calculateRunScore(ctx, runId)
+    loggerInfo.Printf("SCOREEEEEEE: `%d`", score)
+    if err != nil {
+        loggerWarn.Printf("Unable to calculate the final score for a run with ID `%d`.", runId.RawSnowflake)
+        return 0, err
+    }
+
+    _, err = db.Exec("UPDATE runs SET score = ? WHERE runs.snowflake_id = ? AND score IS NULL;", score, runId.RawSnowflake)
+    if err != nil {
+        loggerWarn.Printf("Unable to update the final score for a run with ID `%d`.", runId.RawSnowflake)
+        return 0, err
+    }
+
+    loggerInfo.Printf("Successfully updated the final score for a run with ID `%d`.", runId.RawSnowflake)
+    return score, nil
 }
 
 //Routes related to statistics

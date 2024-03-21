@@ -1,7 +1,7 @@
-import { For } from 'solid-js';
+import { For, createResource } from 'solid-js';
 import style from './Leaderboard.module.css';
 import { createAutoAnimate } from '@formkit/auto-animate/solid';
-import { useLeaderboardState } from './LeaderboardContext';
+import { getLeaderboardScores, useLeaderboardState } from './LeaderboardContext';
 import { IconAward } from '@tabler/icons-solidjs';
 export default function Leaderboard() {
 	const state = useLeaderboardState();
@@ -13,11 +13,12 @@ export default function Leaderboard() {
 		// When true, this will enable animations even if the user has indicated
 		// they don’t want them via prefers-reduced-motion.
 	});
+    const [leaderboard] = createResource(getLeaderboardScores)
 	return (
 		<aside class={style.leaderBoard}>
 			<h1>Najlepsze wyniki:</h1>
 			<ol class={style.list} ref={parent}>
-				<For each={state.users()}>
+				<For each={leaderboard()}>
 					{(user, index) => (
 						<li
 							class={style.user}

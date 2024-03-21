@@ -181,9 +181,9 @@ INSERT INTO answers (id, question_id, answer, is_correct, chosen) VALUES
 (49, 706, "Cell", false, 0),
 (877, 706, "PowerPC", false, 0);
 
-INSERT INTO runs (snowflake_id, player_id, ended) VALUES
-(0, 1, true),
-(1, 1, false);
+INSERT INTO runs (snowflake_id, player_id, ended, score) VALUES
+(0, 1, true, 382),
+(1, 1, false, NULL);
 
 INSERT INTO run_questions (id, run_id, question_id, answer_id, answered_at, question_num) VALUES
 (0, 0, 967, 345, 332432423, 0),

@@ -2,9 +2,14 @@
 SELECT * FROM players;
 SELECT * FROM questions;
 SELECT * FROM answers;
-SELECT * FROM runs;
+SELECT * FROM runs
 SELECT * FROM run_questions;
 SELECT * FROM run_lifelines;
+
+SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won, r.score FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);
+
+SELECT * FROM runs
+UPDATE runs SET score = 18 WHERE runs.snowflake_id = 1 AND score IS NULL;
 
 --- Create a player
 INSERT INTO players (snowflake_id, name, tries_left) VALUES (?, ?, ?);

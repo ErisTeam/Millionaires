@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS runs (
     snowflake_id INTEGER UNIQUE NOT NULL primary key,
     player_id INTEGER NOT NULL,
     ended BOOLEAN DEFAULT FALSE,
+    score INTEGER DEFAULT NULL,
     FOREIGN KEY (player_id) REFERENCES players(id)
 );
 
@@ -61,5 +62,5 @@ CREATE TABLE IF NOT EXISTS feedback(
     id INTEGER UNIQUE NOT NULL PRIMARY KEY AUTOINCREMENT,
     player_id INTEGER NOT NULL,
     run_id INTEGER NOT NULL,
-    message VARCHAR(255) NOT NULL,
+    message VARCHAR(255) NOT NULL
 );

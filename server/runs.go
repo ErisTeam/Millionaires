@@ -135,6 +135,12 @@ func endRun(ctx *fiber.Ctx, runId Snowflake) (bool, error) {
 
 	if affected > 0 {
 		loggerInfo.Printf("Run with id `%d` successfully ended!", runId.RawSnowflake)
+        loggerInfo.Printf("Calculating final score for a run with ID `%d`.", runId.RawSnowflake)
+        score, err := calculateFinalRunScore(ctx, runId)
+        loggerInfo.Printf("FINAL SCORE: `%d`", score)
+        if err != nil {
+            return false, err
+        }
 	} else {
 		loggerInfo.Printf("Run with id `%d` already ended.", runId.RawSnowflake)
 	}
@@ -231,24 +237,28 @@ func getRunsRoute(ctx *fiber.Ctx) error {
 
 	loggerInfo.Println(routeFmt("getRuns", "Visited."))
 
-	run_rows, err := db.Query("SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);")
+	run_rows, err := db.Query("SELECT r.snowflake_id AS run_id, p.name AS player_name, rl.used_lifelines AS last_used_lifeline, rq.question_num = 11 AND a.is_correct = TRUE AS won, r.score FROM runs r JOIN players p ON r.player_id = p.snowflake_id JOIN run_questions rq ON r.snowflake_id = rq.run_id LEFT JOIN run_lifelines rl ON rq.id = rl.run_question_id LEFT JOIN answers a ON rq.answer_id = a.id WHERE r.ended = TRUE AND rq.id IN ( SELECT MAX(id) FROM run_questions GROUP BY run_id);")
 	if err != nil {
 		return c_error(ctx, routeFmt("getRuns", fmt.Sprintf("Unable to get runs. Reason: `%s`", err)), fiber.ErrInternalServerError.Code)
 	}
 
 	var response = protobufMessages.GetRunsResponse{}
 	for run_rows.Next() {
+        var runId int64
+        var score int
 		run := protobufMessages.EndedRunStat{}
 		var usedLifelines sql.NullInt64
-		run_rows.Scan(&run.RunId, &run.Name, &usedLifelines, &run.Won)
+		run_rows.Scan(&runId, &run.Name, &usedLifelines, &run.Won, &score)
 		if !usedLifelines.Valid {
 			run.UsedLifelines = 0
 		} else {
 			run.UsedLifelines = int32(usedLifelines.Int64)
 		}
+        run.Score = int32(score)
 		response.Runs = append(response.Runs, &run)
 	}
 	defer run_rows.Close()
+
 
 	out, err := proto.Marshal(&response)
 	if err != nil {
